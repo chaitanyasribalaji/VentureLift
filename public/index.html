@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>VentureLift Innovation Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body class="body">
+    <!-- ============ AUTH SCREEN (hero slider) ============ -->
+    <section id="authScreen" class="hero-slider text-light">
+      <div class="image-1"></div>
+      <div class="image-2"></div>
+      <div class="image-3"></div>
+      <div class="swipe-panel"></div>
+
+      <div class="navbar">
+        <div class="nav-container">
+          <div class="nav-wrapper">
+            <a href="/" class="nav-brand">
+              <span class="nav-logo">VL</span>
+              <div class="nav-logo-text">VENTURELIFT</div>
+            </a>
+            <div class="nav-menu-wrapper">
+              <a href="#" class="nav-link">
+                <div class="nav-text-wrap">
+                  <div class="link-text">Platform</div>
+                  <div class="link-text-hov">Platform</div>
+                </div>
+              </a>
+              <a href="#" class="nav-link">
+                <div class="nav-text-wrap">
+                  <div class="link-text">For founders</div>
+                  <div class="link-text-hov">For founders</div>
+                </div>
+              </a>
+              <a href="#" class="nav-link">
+                <div class="nav-text-wrap">
+                  <div class="link-text">Mentors</div>
+                  <div class="link-text-hov">Mentors</div>
+                </div>
+              </a>
+              <a href="#" class="nav-link">
+                <div class="nav-text-wrap">
+                  <div class="link-text">Innovation</div>
+                  <div class="link-text-hov">Innovation</div>
+                </div>
+              </a>
+              <div class="nav-divider"></div>
+              <div class="nav-globe">&#9783;</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-container">
+        <div class="flex-sb-c">
+          <div class="hero-text-col">
+            <div class="text-rotate-cell">
+              <h1 class="static-text">Empower</h1>
+              <div class="text-rotate-wrap">
+                <div class="text-rotate-track" id="textRotateTrack">
+                  <h1 class="rotating-text" style="color:#ff3d00">Founders</h1>
+                  <h1 class="rotating-text" style="color:#ff3d00">Ideas</h1>
+                  <h1 class="rotating-text" style="color:#ff3d00">Ventures</h1>
+                  <h1 class="rotating-text" style="color:#ff3d00">Founders</h1>
+                </div>
+              </div>
+            </div>
+            <div class="p-wrap mt-20">
+              <p class="lead-text text-grey">&ldquo;The entrepreneur's job is to turn ambiguity into clarity, and ideas into impact.&rdquo;</p>
+            </div>
+            <div class="caption-wrap">
+              <div class="text-grey">&mdash;</div>
+              <div class="hero-caption text-grey">VentureLift Innovation Platform</div>
+            </div>
+          </div>
+
+          <div class="hero-video-column">
+            <div class="auth-panel">
+              <div class="auth-card-head">
+                <span class="secure-dot"></span>
+                <p>Unified role-based login</p>
+              </div>
+              <div class="auth-tabs">
+                <button class="auth-tab active" data-auth="login">Login</button>
+                <button class="auth-tab" data-auth="register">Register</button>
+              </div>
+
+              <form id="loginForm" class="auth-form active">
+                <h2>Welcome back</h2>
+                <p class="form-note">Use your account email and password. Your role is detected automatically after login.</p>
+                <label>Email<input name="email" type="email" required autocomplete="email" placeholder="you@venturelift.local"></label>
+                <label>Password<input name="password" type="password" required autocomplete="current-password" placeholder="Enter password"></label>
+                <button class="primary" type="submit">Login</button>
+                <p id="loginStatus" class="status"></p>
+              </form>
+
+              <form id="registerForm" class="auth-form">
+                <h2>Create account</h2>
+                <label>Name<input name="name" required autocomplete="name" placeholder="Your name"></label>
+                <label>Email<input name="email" type="email" required autocomplete="email" placeholder="you@example.com"></label>
+                <label>Password<input name="password" type="password" required autocomplete="new-password" placeholder="At least 6 characters"></label>
+                <label>Role
+                  <select name="role">
+                    <option value="founder">Founder</option>
+                    <option value="mentor">Mentor</option>
+                  </select>
+                </label>
+                <label>Expertise or focus<input name="expertise" placeholder="AI, healthtech, fundraising, product"></label>
+                <button class="primary" type="submit">Create account</button>
+                <p id="registerStatus" class="status"></p>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ============ APP SHELL ============ -->
+    <section id="appShell" class="app-shell hidden">
+      <header class="topbar">
+        <div class="topbar-inner">
+          <div class="topbar-left">
+            <span class="nav-logo top-logo">VL</span>
+            <div class="topbar-brand">VENTURELIFT</div>
+          </div>
+          <div class="topbar-center">
+            <nav class="tabs" aria-label="Main views">
+              <button class="tab active" data-view="dashboard">Dashboard</button>
+              <button class="tab founder-only admin-only" data-view="venture">Venture Builder</button>
+              <button class="tab" data-view="ai">AI Validation</button>
+              <button class="tab" data-view="mentor">Search</button>
+              <button class="tab admin-only" data-view="admin">Admin</button>
+            </nav>
+          </div>
+          <div class="topbar-right">
+            <span id="roleLine" class="role-line"></span>
+            <button id="logoutBtn" class="ghost">Logout</button>
+          </div>
+        </div>
+      </header>
+
+      <main>
+        <section id="dashboard" class="view active">
+          <div class="dashboard-header">
+            <h1 id="commandTitle">Founder command center</h1>
+            <p class="text-grey">Your venture platform overview</p>
+          </div>
+          <div class="metrics">
+            <article>
+              <small>Portfolio</small>
+              <span id="ventureCount">0</span>
+              <p>ventures tracked</p>
+            </article>
+            <article>
+              <small>Validation</small>
+              <span id="avgScore">--</span>
+              <p>latest validation score</p>
+            </article>
+            <article>
+              <small>Stage focus</small>
+              <span id="stageFocus">Idea</span>
+              <p>dominant stage</p>
+            </article>
+          </div>
+
+          <div class="split">
+            <section class="panel">
+              <div class="panel-head">
+                <h2>Portfolio</h2>
+                <button id="refreshBtn" class="icon-btn" title="Refresh">&#8635;</button>
+              </div>
+              <div id="ventureList" class="venture-list"></div>
+            </section>
+
+            <section class="panel">
+              <div id="roleCards" class="timeline"></div>
+            </section>
+          </div>
+        </section>
+
+        <section id="venture" class="view">
+          <div class="dashboard-header">
+            <h1>Build a venture profile</h1>
+            <p class="text-grey">Save the startup details, then send them to AI validation.</p>
+          </div>
+          <form id="ventureForm" class="builder">
+            <label>Venture name<input name="name" required placeholder="VentureLift"></label>
+            <label>Founder name<input name="founder" required placeholder="Your name"></label>
+            <div class="grid-2">
+              <label>Sector<input name="sector" required placeholder="Fintech, health, education"></label>
+              <label>Stage
+                <select name="stage" required>
+                  <option>Idea</option>
+                  <option>Prototype</option>
+                  <option>MVP</option>
+                  <option>Pilot</option>
+                  <option>Revenue</option>
+                </select>
+              </label>
+            </div>
+            <label>Problem<textarea name="problem" required placeholder="What painful problem are you solving?"></textarea></label>
+            <label>Solution<textarea name="solution" required placeholder="How does your product solve it?"></textarea></label>
+            <label>Target customer<textarea name="customer" required placeholder="Who needs this first?"></textarea></label>
+            <div class="grid-2">
+              <label>Traction<input name="traction" required placeholder="Interviews, waitlist, sales, pilot"></label>
+              <label>Next goal<input name="goals" required placeholder="Validate MVP with 20 users"></label>
+            </div>
+            <button class="primary" type="submit">Save venture</button>
+            <p id="saveStatus" class="status"></p>
+          </form>
+        </section>
+
+        <section id="ai" class="view">
+          <div class="dashboard-header">
+            <h1>AI validation &amp; tools</h1>
+            <p class="text-grey">Validate ideas, analyze pitch language, ask questions, get suggestions, and generate roadmaps.</p>
+          </div>
+          <div id="aiStatus" class="ai-status"></div>
+          <div class="split">
+            <section class="panel">
+              <h2>AI idea validation</h2>
+              <label>Select venture<select id="ventureSelect"></select></label>
+              <button id="validateBtn" class="primary">Run validation</button>
+              <div id="validationResult" class="result"></div>
+            </section>
+            <section class="panel">
+              <h2>NLP market signal analyzer</h2>
+              <textarea id="nlpText" placeholder="Paste your pitch, problem statement, or customer interview notes."></textarea>
+              <button id="nlpBtn" class="secondary">Analyze language</button>
+              <div id="nlpResult" class="result"></div>
+            </section>
+          </div>
+          <div class="assistant-grid">
+            <section class="panel assistant-panel">
+              <h2>FAQ bot</h2>
+              <p class="panel-note">Ask about validation, mentors, roles, roadmap, funding, or how to use the platform.</p>
+              <textarea id="faqQuestion" placeholder="Example: How do I find a mentor for a fintech venture?"></textarea>
+              <button id="faqBtn" class="secondary">Ask FAQ bot</button>
+              <div id="faqResult" class="result"></div>
+            </section>
+            <section class="panel assistant-panel">
+              <h2>Suggestion chat</h2>
+              <p class="panel-note">Ask for practical startup advice using the selected venture as context.</p>
+              <textarea id="suggestionMessage" placeholder="Example: What should I validate before pitching investors?"></textarea>
+              <button id="suggestionBtn" class="secondary">Get suggestions</button>
+              <div id="suggestionResult" class="result"></div>
+            </section>
+            <section class="panel assistant-panel roadmap-panel">
+              <h2>Roadmap generator</h2>
+              <p id="roadmapLock" class="panel-note">Run validation first. Roadmap unlocks when score is above 75.</p>
+              <button id="roadmapBtn" class="primary" disabled>Generate roadmap</button>
+              <div id="roadmapResult" class="result"></div>
+            </section>
+          </div>
+        </section>
+
+        <section id="mentor" class="view">
+          <div class="dashboard-header">
+            <h1>Search</h1>
+            <p class="text-grey">Find mentors or explore ventures across the platform.</p>
+          </div>
+          <div class="split">
+            <section class="panel founder-only admin-only" id="mentorFinderPanel">
+              <h2>Find mentors for your venture</h2>
+              <div class="search-row">
+                <input id="mentorSearchInput" placeholder="Search by name, email, product, AI, fundraising">
+                <button id="mentorSearchBtn" class="secondary">Search mentors</button>
+              </div>
+              <div id="mentorSearchResults" class="venture-list"></div>
+            </section>
+            <section class="panel mentor-only admin-only" id="ventureFinderPanel">
+              <h2>Find founder ventures</h2>
+              <div class="search-row">
+                <input id="ventureSearchInput" placeholder="Search by sector, stage, founder, customer, problem">
+                <button id="ventureSearchBtn" class="secondary">Search ventures</button>
+              </div>
+              <div id="ventureSearchResults" class="venture-list"></div>
+            </section>
+          </div>
+        </section>
+
+        <section id="admin" class="view">
+          <div class="dashboard-header">
+            <h1>Admin panel</h1>
+            <p class="text-grey">Manage users, roles, sessions, and venture activity.</p>
+          </div>
+          <div class="split">
+            <section class="panel">
+              <div class="panel-head">
+                <h2>User management</h2>
+                <button id="loadUsersBtn" class="icon-btn" title="Refresh users">&#8635;</button>
+              </div>
+              <div id="userList" class="venture-list"></div>
+            </section>
+            <section class="panel">
+              <h2>Platform controls</h2>
+              <div class="timeline">
+                <div><strong>Roles</strong><span>Admin can view users and all ventures.</span></div>
+                <div><strong>Mentors</strong><span>Mentors can review all venture profiles.</span></div>
+                <div><strong>Founders</strong><span>Founders can create and validate their own ventures.</span></div>
+              </div>
+            </section>
+          </div>
+        </section>
+      </main>
+    </section>
+
+    <script src="/app.js"></script>
+  </body>
+</html>
