@@ -28,7 +28,7 @@ npm start
 Open:
 
 ```text
-http://127.0.0.1:8002
+http://127.0.0.1:8000
 ```
 
 ## Connect AI
@@ -54,6 +54,18 @@ npm start
 ```
 
 The server will continue to use the local SQLite database for primary storage while optionally sending copies of new users, ventures, and AI reports to your Supabase project.
+
+## Deploy to Vercel
+
+For Vercel, the app uses a serverless API route and shared backend logic from `lib/backend.mjs`.
+
+Set environment variables in Vercel for production:
+
+- `JWT_SECRET` (any long random secret)
+- `SUPABASE_URL` and `SUPABASE_KEY` if you want remote replication
+- `OPENAI_API_KEY` / `ADVANCED_AI_API_KEY` and `AI_MODEL` for AI support
+
+If you do not configure Supabase, the app will still run using the local SQLite `venture_platform.db` file in development, but Vercel deployments should use Supabase for persistent storage.
 
 ## Demo logins
 
