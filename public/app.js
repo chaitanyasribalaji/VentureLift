@@ -69,8 +69,7 @@ function clearFieldFeedback(elementId) {
 
 function updatePasswordFeedback(password) {
   const feedbackId = "registerPasswordFeedback";
-  const feedback = $(`#${feedbackId}`);
-  if (!feedback) return;
+  if (!$( `#${feedbackId}` )) return;
   if (!password) {
     setFieldFeedback(feedbackId, "Password should be at least 6 characters.", "weak");
     return;
