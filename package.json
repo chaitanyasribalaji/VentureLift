@@ -1,0 +1,13 @@
+{
+  "name": "venturelift",
+  "version": "1.0.0",
+  "description": "VentureLift entrepreneurial support platform with optional Supabase sync.",
+  "type": "module",
+  "main": "server.mjs",
+  "scripts": {
+    "start": "node server.mjs"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.0.0"
+  }
+}

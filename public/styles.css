@@ -830,10 +830,65 @@ main {
 /* ---- Builder (venture form) ---- */
 .builder {
   max-width: 720px;
+  margin: 0 auto;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.07);
   border-radius: 10px;
   padding: 28px;
+}
+#mentor .split {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  justify-content: center;
+  justify-items: center;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+#mentor .panel {
+  max-width: 520px;
+  width: 100%;
+  justify-self: center;
+  min-width: 0;
+}
+.search-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  justify-items: stretch;
+  width: 100%;
+}
+.search-row input {
+  width: 100%;
+  min-width: 0;
+}
+#venture .dashboard-header,
+#mentor .dashboard-header {
+  text-align: center;
+}
+
+@media (max-width: 860px) {
+  .split,
+  #mentor .split,
+  .assistant-grid {
+    grid-template-columns: 1fr;
+  }
+  .grid-2 {
+    grid-template-columns: 1fr;
+  }
+  .search-row {
+    grid-template-columns: 1fr;
+  }
+  .search-row .secondary {
+    width: 100%;
+  }
+}
+#venture .dashboard-header p,
+#mentor .dashboard-header p {
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 760px;
 }
 
 .builder label {

@@ -13,8 +13,16 @@ A dependency-free full-stack prototype for an entrepreneurial support and innova
 
 ## Run
 
+Install dependencies first:
+
 ```powershell
-node server.mjs
+npm install
+```
+
+Then start the server:
+
+```powershell
+npm start
 ```
 
 Open:
@@ -30,10 +38,22 @@ Set an API key before running the server:
 ```powershell
 $env:OPENAI_API_KEY="sk-your-openai-api-key"
 $env:AI_MODEL="gpt-5.4-mini"
-node server.mjs
+npm start
 ```
 
 If you prefer a different variable name, the server also accepts `ADVANCED_AI_API_KEY` as an alias for `OPENAI_API_KEY`.
+
+## Optional Supabase replication
+
+If you want the app to replicate users, ventures, and AI reports to Supabase, add these environment variables:
+
+```powershell
+$env:SUPABASE_URL="https://your-supabase-project-ref.supabase.co"
+$env:SUPABASE_KEY="your-supabase-key"
+npm start
+```
+
+The server will continue to use the local SQLite database for primary storage while optionally sending copies of new users, ventures, and AI reports to your Supabase project.
 
 ## Demo logins
 

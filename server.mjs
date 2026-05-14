@@ -5,6 +5,7 @@ import { extname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { DatabaseSync } from "node:sqlite";
 import { randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
+import { createClient } from "@supabase/supabase-js";
 
 const ROOT = fileURLToPath(new URL(".", import.meta.url));
 const PUBLIC = resolve(ROOT, "public");
@@ -30,6 +31,10 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY || process.env.ADVANCED_AI_API
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
 const AI_PROVIDER = OPENAI_API_KEY ? "openai" : GROQ_API_KEY ? "groq" : null;
 const AI_MODEL = process.env.AI_MODEL || (AI_PROVIDER === "groq" ? "llama3-8b-8192" : "gpt-5.4-mini");
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_KEY = process.env.SUPABASE_KEY;
+const supabase = SUPABASE_URL && SUPABASE_KEY ? createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: false } }) : null;
+const USE_SUPABASE = Boolean(supabase);
 const PORT = Number(process.env.PORT || 8000);
 
 const database = new DatabaseSync(DB_PATH);
@@ -129,6 +134,25 @@ function publicUser(user) {
     expertise: user.expertise,
     created_at: user.created_at,
   };
+}
+
+async function supabaseInsert(table, record) {
+  if (!supabase) return null;
+  try {
+    const { data, error } = await supabase.from(table).insert(record).select();
+    if (error) {
+      console.warn(`Supabase sync error for ${table}:`, error.message || error);
+      return null;
+    }
+    return data;
+  } catch (error) {
+    console.warn(`Supabase sync exception for ${table}:`, error.message || error);
+    return null;
+  }
+}
+
+function supabaseValue(value) {
+  return value === undefined ? null : value;
 }
 
 function seedUser({ name, email, password, role, expertise = "" }) {
@@ -759,10 +783,18 @@ function localRoadmap(venture, score) {
   };
 }
 
-function saveReport(ventureId, reportType, payload) {
+async function saveReport(ventureId, reportType, payload) {
   database
     .prepare("INSERT INTO ai_reports (venture_id, report_type, payload, created_at) VALUES (?, ?, ?, ?)")
     .run(ventureId || null, reportType, JSON.stringify(payload), nowIso());
+  if (USE_SUPABASE) {
+    await supabaseInsert("ai_reports", {
+      venture_id: supabaseValue(ventureId),
+      report_type: supabaseValue(reportType),
+      payload: supabaseValue(JSON.stringify(payload)),
+      created_at: supabaseValue(nowIso()),
+    });
+  }
 }
 
 function searchText(value) {
@@ -817,6 +849,16 @@ async function routeApi(request, response, url) {
         .prepare("INSERT INTO users (name, email, password_hash, role, expertise, created_at) VALUES (?, ?, ?, ?, ?, ?)")
         .run(name, email, hashPassword(password), role, expertise, nowIso());
       const user = database.prepare("SELECT * FROM users WHERE id = ?").get(result.lastInsertRowid);
+      if (USE_SUPABASE) {
+        await supabaseInsert("users", {
+          name: supabaseValue(user.name),
+          email: supabaseValue(user.email),
+          password_hash: supabaseValue(user.password_hash),
+          role: supabaseValue(user.role),
+          expertise: supabaseValue(user.expertise),
+          created_at: supabaseValue(user.created_at),
+        });
+      }
       sendJson(response, 201, { user: publicUser(user) });
     } catch {
       sendJson(response, 409, { error: "An account with this email already exists." });
@@ -941,6 +983,21 @@ async function routeApi(request, response, url) {
       `)
       .run(user.id, ...values, nowIso());
     const venture = database.prepare("SELECT * FROM ventures WHERE id = ?").get(result.lastInsertRowid);
+    if (USE_SUPABASE) {
+      await supabaseInsert("ventures", {
+        user_id: supabaseValue(venture.user_id),
+        name: supabaseValue(venture.name),
+        founder: supabaseValue(venture.founder),
+        sector: supabaseValue(venture.sector),
+        stage: supabaseValue(venture.stage),
+        problem: supabaseValue(venture.problem),
+        solution: supabaseValue(venture.solution),
+        customer: supabaseValue(venture.customer),
+        traction: supabaseValue(venture.traction),
+        goals: supabaseValue(venture.goals),
+        created_at: supabaseValue(venture.created_at),
+      });
+    }
     sendJson(response, 201, { venture });
     return true;
   }
@@ -959,7 +1016,7 @@ async function routeApi(request, response, url) {
       result.summary = `${result.summary} API call failed: ${error.message}`;
       source = "local";
     }
-    saveReport(venture.id, "validation", result);
+    await saveReport(venture.id, "validation", result);
     sendJson(response, 200, { source, result });
     return true;
   }
@@ -970,6 +1027,8 @@ async function routeApi(request, response, url) {
       provider: AI_PROVIDER,
       model: AI_PROVIDER ? AI_MODEL : null,
       key_name: process.env.OPENAI_API_KEY ? "OPENAI_API_KEY" : process.env.GROQ_API_KEY ? "GROQ_API_KEY" : process.env.ADVANCED_AI_API_KEY ? "ADVANCED_AI_API_KEY" : null,
+      supabase_enabled: USE_SUPABASE,
+      supabase_url: USE_SUPABASE ? SUPABASE_URL : null,
     });
     return true;
   }
@@ -992,7 +1051,7 @@ async function routeApi(request, response, url) {
       result.market_signals.push(`API call failed: ${error.message}`);
       source = "local";
     }
-    saveReport(payload.venture_id, "nlp", result);
+    await saveReport(payload.venture_id, "nlp", result);
     sendJson(response, 200, { source, result });
     return true;
   }
@@ -1059,7 +1118,7 @@ async function routeApi(request, response, url) {
       result.funding_readiness.push(`AI call failed: ${error.message}`);
       source = "local";
     }
-    saveReport(payload.venture?.id, "roadmap", result);
+    await saveReport(payload.venture?.id, "roadmap", result);
     sendJson(response, 200, { source, result });
     return true;
   }

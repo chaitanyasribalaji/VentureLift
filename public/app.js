@@ -14,8 +14,25 @@ async function api(path, options = {}) {
     headers: { "Content-Type": "application/json" },
     ...options,
   });
-  const data = await response.json();
-  if (!response.ok) throw new Error(data.error || "Request failed");
+
+  const responseText = await response.text();
+  let data;
+  try {
+    data = responseText ? JSON.parse(responseText) : {};
+  } catch (error) {
+    const message = responseText.trim() || response.statusText || "Request failed";
+    if (!response.ok) {
+      console.warn("API error", path, response.status, message, responseText);
+      throw new Error(message);
+    }
+    throw new Error(message);
+  }
+
+  if (!response.ok) {
+    const message = data?.error || response.statusText || "Request failed";
+    console.warn("API error", path, response.status, message, responseText);
+    throw new Error(message);
+  }
   return data;
 }
 
@@ -656,6 +673,7 @@ $("#loginForm").addEventListener("submit", async (event) => {
   try {
     await login(payload.email, payload.password);
   } catch (error) {
+    console.error("Login failed", error);
     $("#loginStatus").textContent = error.message;
   }
 });
