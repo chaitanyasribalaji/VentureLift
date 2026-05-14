@@ -5,8 +5,8 @@ import { extname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { routeApi } from "./lib/backend.mjs";
 
-const ROOT = fileURLToPath(new URL(".", import.meta.url));
-const PUBLIC = resolve(ROOT, "public");
+const ROOT = fileURLToPath(new URL("../", import.meta.url));
+const PUBLIC = ROOT;
 const PORT = Number(process.env.PORT || 8000);
 
 const contentTypes = {
