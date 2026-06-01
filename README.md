@@ -43,6 +43,33 @@ npm start
 
 If you prefer a different variable name, the server also accepts `ADVANCED_AI_API_KEY` as an alias for `OPENAI_API_KEY`.
 
+## TensorFlow CNN training
+
+A separate training script has been added to the repository for a minimal TensorFlow CNN workflow.
+
+Install TensorFlow in your Python environment:
+
+```powershell
+python -m pip install tensorflow
+```
+
+Then run the training script:
+
+```powershell
+python train_cnn.py --epochs 10 --batch-size 64 --output-dir models --model-name cnn_cifar10.keras
+```
+
+The script downloads CIFAR-10, trains a small convolutional model, evaluates it on test data, and saves the model to `models/cnn_cifar10.keras`.
+
+### CNN inference from the Node app
+
+A new API route is available to run inference using the saved TensorFlow model:
+
+- `POST /api/cnn-predict`
+- JSON body: `{ "image_base64": "..." }`
+
+The route returns CIFAR-10 class probabilities and the predicted label.
+
 ## Optional Supabase replication
 
 If you want the app to replicate users, ventures, and AI reports to Supabase, add these environment variables:

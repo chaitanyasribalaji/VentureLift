@@ -292,7 +292,7 @@ function renderValidation(payload, source) {
   $("#validationResult").innerHTML = `
     <article class="result-card">
       <div class="score">${escapeHtml(result.score || "--")}</div>
-      <strong>${source === "openai" ? "AI model validation" : "Local fallback validation"}</strong>
+      <strong>Venture validation</strong>
       <p>${escapeHtml(result.summary || "")}</p>
     </article>
     <article class="result-card"><strong>Strengths</strong>${listItems(result.strengths)}</article>
@@ -445,7 +445,7 @@ function setAiStatus(enabled, provider, model) {
     const providerLabel = provider === "groq" ? "Groq enabled" : "OpenAI enabled";
     status.textContent = `${providerLabel} — model: ${model}`;
   } else {
-    status.textContent = "AI key not configured. The platform is using local AI fallback analysis.";
+    status.textContent = "Idea validation is available locally.";
   }
   status.classList.toggle("active", enabled);
 }
