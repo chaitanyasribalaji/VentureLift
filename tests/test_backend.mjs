@@ -129,3 +129,353 @@ test("ai-status reports local mode without API keys", async () => {
   assert.equal(data.enabled, false);
   assert.equal(data.supabase_enabled, false);
 });
+
+// ── Registration ────────────────────────────────────────────────────
+
+test("register a new founder account", async () => {
+  const { response, data } = await api("/api/register", {
+    method: "POST",
+    body: JSON.stringify({
+      name: "Test Founder",
+      email: "test-register@venturelift.local",
+      password: "TestPass123",
+      role: "founder",
+    }),
+  });
+  assert.equal(response.status, 201);
+  assert.equal(data.user.role, "founder");
+  assert.equal(data.user.email, "test-register@venturelift.local");
+});
+
+test("register rejects duplicate email", async () => {
+  const { response } = await api("/api/register", {
+    method: "POST",
+    body: JSON.stringify({
+      name: "Dupe Founder",
+      email: "founder@venturelift.local",
+      password: "DupePass123",
+      role: "founder",
+    }),
+  });
+  assert.equal(response.status, 409);
+});
+
+test("register rejects short password", async () => {
+  const { response } = await api("/api/register", {
+    method: "POST",
+    body: JSON.stringify({
+      name: "Bad Password",
+      email: "badpw@venturelift.local",
+      password: "12",
+      role: "founder",
+    }),
+  });
+  assert.equal(response.status, 400);
+});
+
+// ── Login failures ──────────────────────────────────────────────────
+
+test("login fails with wrong password", async () => {
+  const { response } = await api("/api/login", {
+    method: "POST",
+    body: JSON.stringify({ email: "founder@venturelift.local", password: "WrongPass" }),
+  });
+  assert.equal(response.status, 401);
+});
+
+test("login fails with non-existent email", async () => {
+  const { response } = await api("/api/login", {
+    method: "POST",
+    body: JSON.stringify({ email: "nobody@venturelift.local", password: "NoPass123" }),
+  });
+  assert.equal(response.status, 401);
+});
+
+// ── Logout ──────────────────────────────────────────────────────────
+
+test("logout clears session cookie", async () => {
+  const login = await api("/api/login", {
+    method: "POST",
+    body: JSON.stringify({ email: "founder@venturelift.local", password: "Founder@123" }),
+  });
+  const cookie = login.response.headers.get("set-cookie");
+
+  const logout = await api("/api/logout", {
+    method: "POST",
+    headers: { Cookie: cookie },
+  });
+  assert.equal(logout.response.status, 200);
+  assert.equal(logout.data.ok, true);
+
+  const clearCookie = logout.response.headers.get("set-cookie");
+  assert.ok(clearCookie.includes("Max-Age=0"), "logout should set Max-Age=0 to clear cookie");
+});
+
+// ── /api/me without auth ────────────────────────────────────────────
+
+test("me returns null user without auth", async () => {
+  const { data } = await api("/api/me");
+  assert.equal(data.user, null);
+});
+
+// ── Mentor listing ──────────────────────────────────────────────────
+
+test("mentors endpoint returns mentors for founder", async () => {
+  const login = await api("/api/login", {
+    method: "POST",
+    body: JSON.stringify({ email: "founder@venturelift.local", password: "Founder@123" }),
+  });
+  const cookie = login.response.headers.get("set-cookie");
+
+  const { response, data } = await api("/api/mentors", { headers: { Cookie: cookie } });
+  assert.equal(response.status, 200);
+  assert.ok(Array.isArray(data.mentors));
+  assert.ok(data.mentors.length > 0);
+  assert.ok(data.mentors.every((m) => m.role === "mentor"));
+});
+
+test("mentors endpoint supports search query", async () => {
+  const login = await api("/api/login", {
+    method: "POST",
+    body: JSON.stringify({ email: "founder@venturelift.local", password: "Founder@123" }),
+  });
+  const cookie = login.response.headers.get("set-cookie");
+
+  const { data } = await api("/api/mentors?q=fintech", { headers: { Cookie: cookie } });
+  assert.ok(Array.isArray(data.mentors));
+  assert.ok(data.mentors.some((m) => m.expertise.toLowerCase().includes("fintech")));
+});
+
+test("mentors endpoint requires auth", async () => {
+  const { response } = await api("/api/mentors");
+  assert.equal(response.status, 401);
+});
+
+// ── Admin users ─────────────────────────────────────────────────────
+
+test("admin can list all users", async () => {
+  const login = await api("/api/login", {
+    method: "POST",
+    body: JSON.stringify({ email: "admin@venturelift.local", password: "Admin@123" }),
+  });
+  const cookie = login.response.headers.get("set-cookie");
+
+  const { response, data } = await api("/api/users", { headers: { Cookie: cookie } });
+  assert.equal(response.status, 200);
+  assert.ok(Array.isArray(data.users));
+  assert.ok(data.users.length >= 3);
+});
+
+test("non-admin cannot list users", async () => {
+  const login = await api("/api/login", {
+    method: "POST",
+    body: JSON.stringify({ email: "founder@venturelift.local", password: "Founder@123" }),
+  });
+  const cookie = login.response.headers.get("set-cookie");
+
+  const { response } = await api("/api/users", { headers: { Cookie: cookie } });
+  assert.equal(response.status, 403);
+});
+
+// ── Venture creation ────────────────────────────────────────────────
+
+test("founder can create a new venture", async () => {
+  const login = await api("/api/login", {
+    method: "POST",
+    body: JSON.stringify({ email: "founder@venturelift.local", password: "Founder@123" }),
+  });
+  const cookie = login.response.headers.get("set-cookie");
+
+  const { response, data } = await api("/api/ventures", {
+    method: "POST",
+    headers: { Cookie: cookie },
+    body: JSON.stringify({
+      name: "TestVenture",
+      founder: "Test Founder",
+      sector: "SaaS",
+      stage: "Idea",
+      problem: "Manual workflow tracking wastes time.",
+      solution: "Automated dashboard for task tracking.",
+      customer: "Small teams",
+      traction: "5 user interviews",
+      goals: "Launch MVP in 30 days",
+    }),
+  });
+  assert.equal(response.status, 201);
+  assert.equal(data.venture.name, "TestVenture");
+});
+
+test("venture creation rejects missing fields", async () => {
+  const login = await api("/api/login", {
+    method: "POST",
+    body: JSON.stringify({ email: "founder@venturelift.local", password: "Founder@123" }),
+  });
+  const cookie = login.response.headers.get("set-cookie");
+
+  const { response } = await api("/api/ventures", {
+    method: "POST",
+    headers: { Cookie: cookie },
+    body: JSON.stringify({ name: "Incomplete" }),
+  });
+  assert.equal(response.status, 400);
+});
+
+// ── FAQ endpoint ────────────────────────────────────────────────────
+
+test("faq endpoint returns answer for a question", async () => {
+  const login = await api("/api/login", {
+    method: "POST",
+    body: JSON.stringify({ email: "founder@venturelift.local", password: "Founder@123" }),
+  });
+  const cookie = login.response.headers.get("set-cookie");
+
+  const { response, data } = await api("/api/faq", {
+    method: "POST",
+    headers: { Cookie: cookie },
+    body: JSON.stringify({ question: "What is VentureLift?" }),
+  });
+  assert.equal(response.status, 200);
+  assert.ok(typeof data.result.answer === "string");
+  assert.ok(Array.isArray(data.result.next_steps));
+});
+
+test("faq endpoint rejects empty question", async () => {
+  const login = await api("/api/login", {
+    method: "POST",
+    body: JSON.stringify({ email: "founder@venturelift.local", password: "Founder@123" }),
+  });
+  const cookie = login.response.headers.get("set-cookie");
+
+  const { response } = await api("/api/faq", {
+    method: "POST",
+    headers: { Cookie: cookie },
+    body: JSON.stringify({ question: "" }),
+  });
+  assert.equal(response.status, 400);
+});
+
+// ── Suggestions endpoint ────────────────────────────────────────────
+
+test("suggestions endpoint returns structured advice", async () => {
+  const login = await api("/api/login", {
+    method: "POST",
+    body: JSON.stringify({ email: "founder@venturelift.local", password: "Founder@123" }),
+  });
+  const cookie = login.response.headers.get("set-cookie");
+
+  const { response, data } = await api("/api/suggestions", {
+    method: "POST",
+    headers: { Cookie: cookie },
+    body: JSON.stringify({ message: "How do I find product-market fit?" }),
+  });
+  assert.equal(response.status, 200);
+  assert.ok(typeof data.result.reply === "string");
+  assert.ok(Array.isArray(data.result.action_items));
+  assert.ok(Array.isArray(data.result.risks_to_watch));
+});
+
+test("suggestions endpoint rejects empty message", async () => {
+  const login = await api("/api/login", {
+    method: "POST",
+    body: JSON.stringify({ email: "founder@venturelift.local", password: "Founder@123" }),
+  });
+  const cookie = login.response.headers.get("set-cookie");
+
+  const { response } = await api("/api/suggestions", {
+    method: "POST",
+    headers: { Cookie: cookie },
+    body: JSON.stringify({ message: "" }),
+  });
+  assert.equal(response.status, 400);
+});
+
+// ── Roadmap endpoint ────────────────────────────────────────────────
+
+test("roadmap endpoint returns plan for high-scoring venture", async () => {
+  const login = await api("/api/login", {
+    method: "POST",
+    body: JSON.stringify({ email: "founder@venturelift.local", password: "Founder@123" }),
+  });
+  const cookie = login.response.headers.get("set-cookie");
+
+  const { response, data } = await api("/api/roadmap", {
+    method: "POST",
+    headers: { Cookie: cookie },
+    body: JSON.stringify({ score: 82, venture: { name: "CarePulse AI" } }),
+  });
+  assert.equal(response.status, 200);
+  assert.ok(typeof data.result.summary === "string");
+  assert.ok(Array.isArray(data.result.weeks));
+  assert.ok(Array.isArray(data.result.milestones));
+});
+
+test("roadmap endpoint blocks low-scoring ventures", async () => {
+  const login = await api("/api/login", {
+    method: "POST",
+    body: JSON.stringify({ email: "founder@venturelift.local", password: "Founder@123" }),
+  });
+  const cookie = login.response.headers.get("set-cookie");
+
+  const { response } = await api("/api/roadmap", {
+    method: "POST",
+    headers: { Cookie: cookie },
+    body: JSON.stringify({ score: 50 }),
+  });
+  assert.equal(response.status, 403);
+});
+
+// ── Reports endpoint ────────────────────────────────────────────────
+
+test("admin can list reports", async () => {
+  const login = await api("/api/login", {
+    method: "POST",
+    body: JSON.stringify({ email: "admin@venturelift.local", password: "Admin@123" }),
+  });
+  const cookie = login.response.headers.get("set-cookie");
+
+  const { response, data } = await api("/api/reports", { headers: { Cookie: cookie } });
+  assert.equal(response.status, 200);
+  assert.ok(Array.isArray(data.reports));
+});
+
+test("founder cannot list reports", async () => {
+  const login = await api("/api/login", {
+    method: "POST",
+    body: JSON.stringify({ email: "founder@venturelift.local", password: "Founder@123" }),
+  });
+  const cookie = login.response.headers.get("set-cookie");
+
+  const { response } = await api("/api/reports", { headers: { Cookie: cookie } });
+  assert.equal(response.status, 403);
+});
+
+// ── NLP error handling ──────────────────────────────────────────────
+
+test("nlp endpoint rejects empty text", async () => {
+  const login = await api("/api/login", {
+    method: "POST",
+    body: JSON.stringify({ email: "founder@venturelift.local", password: "Founder@123" }),
+  });
+  const cookie = login.response.headers.get("set-cookie");
+
+  const { response } = await api("/api/nlp", {
+    method: "POST",
+    headers: { Cookie: cookie },
+    body: JSON.stringify({ text: "" }),
+  });
+  assert.equal(response.status, 400);
+});
+
+// ── Static file serving ─────────────────────────────────────────────
+
+test("serves index.html at root", async () => {
+  const response = await fetch(`${baseUrl}/`);
+  assert.equal(response.status, 200);
+  const ct = response.headers.get("content-type");
+  assert.ok(ct.includes("text/html"));
+});
+
+test("returns 404 for non-existent static file", async () => {
+  const response = await fetch(`${baseUrl}/does-not-exist.html`);
+  assert.equal(response.status, 404);
+});
