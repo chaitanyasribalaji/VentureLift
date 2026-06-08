@@ -14,8 +14,9 @@ export default async function handler(req, res) {
       res.end(JSON.stringify({ error: "Not found" }));
     }
   } catch (error) {
+    console.error("Unhandled API error:", error);
     res.statusCode = 500;
     res.setHeader("Content-Type", "application/json; charset=utf-8");
-    res.end(JSON.stringify({ error: error.message || "Internal Server Error" }));
+    res.end(JSON.stringify({ error: "Internal Server Error" }));
   }
 }

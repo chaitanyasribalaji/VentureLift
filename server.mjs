@@ -29,6 +29,9 @@ async function routeStatic(response, pathname) {
   response.writeHead(200, {
     "Content-Type": contentTypes[extname(filePath)] || "application/octet-stream",
     "Content-Length": body.length,
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY",
+    "Referrer-Policy": "strict-origin-when-cross-origin",
   });
   response.end(body);
 }
@@ -39,8 +42,9 @@ const server = createServer(async (request, response) => {
     if (url.pathname.startsWith("/api/") && (await routeApi(request, response, url))) return;
     await routeStatic(response, url.pathname);
   } catch (error) {
+    console.error("Unhandled API error:", error);
     response.writeHead(500, { "Content-Type": "application/json; charset=utf-8" });
-    response.end(JSON.stringify({ error: error.message }));
+    response.end(JSON.stringify({ error: "Internal Server Error" }));
   }
 });
 
