@@ -460,10 +460,16 @@ function renderVentureSearchResults(ventures) {
 }
 
 async function loadSession() {
-  const data = await api("/api/me");
-  state.user = data.user;
-  applyRoleUi();
-  if (state.user) await loadVentures();
+  try {
+    const data = await api("/api/me");
+    state.user = data.user;
+    applyRoleUi();
+    if (state.user) await loadVentures();
+  } catch (error) {
+    console.error("Failed to restore session", error);
+    state.user = null;
+    applyRoleUi();
+  }
 }
 
 function setAiStatus(enabled, provider, model) {
@@ -501,10 +507,17 @@ async function login(email, password) {
 }
 
 async function loadVentures() {
-  const data = await api("/api/ventures");
-  state.ventures = data.ventures;
-  renderDashboard();
-  renderVentureSelect();
+  try {
+    const data = await api("/api/ventures");
+    state.ventures = data.ventures;
+    renderDashboard();
+    renderVentureSelect();
+  } catch (error) {
+    console.error("Failed to load ventures", error);
+    state.ventures = [];
+    renderDashboard();
+    renderVentureSelect();
+  }
 }
 
 async function searchMentors() {
@@ -562,11 +575,15 @@ async function validateSelected() {
   const id = Number($("#ventureSelect").value);
   const venture = state.ventures.find((item) => item.id === id) || state.selectedVenture;
   $("#validationResult").innerHTML = `<article class="result-card">Running validation...</article>`;
-  const payload = await api("/api/validate", {
-    method: "POST",
-    body: JSON.stringify({ venture }),
-  });
-  renderValidation(payload, payload.source);
+  try {
+    const payload = await api("/api/validate", {
+      method: "POST",
+      body: JSON.stringify({ venture }),
+    });
+    renderValidation(payload, payload.source);
+  } catch (error) {
+    $("#validationResult").innerHTML = `<article class="result-card">${escapeHtml(error.message)}</article>`;
+  }
 }
 
 async function predictCnn() {
@@ -622,11 +639,15 @@ async function analyzeNlp() {
     return;
   }
   $("#nlpResult").innerHTML = `<article class="result-card">Analyzing language...</article>`;
-  const payload = await api("/api/nlp", {
-    method: "POST",
-    body: JSON.stringify({ text }),
-  });
-  renderNlp(payload, payload.source);
+  try {
+    const payload = await api("/api/nlp", {
+      method: "POST",
+      body: JSON.stringify({ text }),
+    });
+    renderNlp(payload, payload.source);
+  } catch (error) {
+    $("#nlpResult").innerHTML = `<article class="result-card">${escapeHtml(error.message)}</article>`;
+  }
 }
 
 async function askFaq() {
@@ -855,6 +876,6 @@ $("#ventureSelect").addEventListener("change", (event) => {
   updateRoadmapState();
 });
 
-loadSession();
+loadSession().catch((error) => console.error("Session init failed", error));
 loadAiStatus();
 updateRoadmapState();
