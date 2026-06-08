@@ -107,9 +107,9 @@ SECTOR_MAP = {
     "Hardware / IoT": {
         "keywords": [
             "electric_fan", "space_heater", "vacuum", "washer", "dryer",
-            "iron", "toaster", "remote_control", "television", "CRT_screen",
+            "iron", "remote_control", "television", "CRT_screen",
             "radio", "tape_player", "speaker", "loudspeaker", "microphone",
-            "headphone", "earphone", "solar_dish", "power_drill",
+            "headphone", "earphone", "power_drill",
             "screwdriver", "hammer", "wrench", "plunger", "rule",
             "digital_watch", "analog_clock", "stopwatch", "odometer",
             "magnetic_compass", "binoculars", "tripod", "lens_cap",
@@ -124,7 +124,7 @@ SECTOR_MAP = {
     },
     "Edtech": {
         "keywords": [
-            "book_jacket", "notebook", "pencil_box", "pencil_sharpener",
+            "book_jacket", "pencil_box", "pencil_sharpener",
             "rubber_eraser", "binder", "library", "desk", "fountain_pen",
             "ballpoint", "quill", "crayon", "paper_towel",
         ],
@@ -141,7 +141,7 @@ SECTOR_MAP = {
             "sweatshirt", "cardigan", "fur_coat", "trench_coat",
             "poncho", "sarong", "bikini", "swimming_trunks",
             "running_shoe", "sandal", "boot", "loafer", "clog",
-            "sunglass", "bow_tie", "neck_brace", "wig",
+            "sunglass", "bow_tie", "wig",
             "handbag", "purse", "backpack", "wallet", "shopping_basket",
             "perfume", "lipstick", "sunscreen",
         ],
@@ -265,7 +265,7 @@ def classify_image(image_base64):
 
         for sector, info in SECTOR_MAP.items():
             for keyword in info["keywords"]:
-                if keyword.lower() in name_lower or name_lower in keyword.lower():
+                if keyword.lower() in name_lower:
                     sector_scores[sector] = sector_scores.get(sector, 0) + float(confidence)
                     break
 
