@@ -46,7 +46,9 @@ function escapeHtml(value) {
 }
 
 function isEmailValid(email) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || "").trim());
+  const trimmed = String(email || "").trim();
+  if (!trimmed) return false;
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed);
 }
 
 function isNameValid(name) {
@@ -100,7 +102,7 @@ function validateLoginForm(form) {
   clearFieldFeedback("loginPasswordFeedback");
   let valid = true;
   const email = String(form.email.value || "").trim();
-  const password = String(form.password.value || "");
+  const password = String(form.password.value || "").trim();
 
   if (!email) {
     setFieldFeedback("loginEmailFeedback", "Email is required.", "error");
@@ -128,7 +130,7 @@ function validateRegisterForm(form) {
   let valid = true;
   const name = String(form.name.value || "").trim();
   const email = String(form.email.value || "").trim();
-  const password = String(form.password.value || "");
+  const password = String(form.password.value || "").trim();
 
   if (!name) {
     setFieldFeedback("registerNameFeedback", "Name is required.", "error");
@@ -150,7 +152,7 @@ function validateRegisterForm(form) {
     setFieldFeedback("registerPasswordFeedback", "Password is required.", "error");
     valid = false;
   } else if (password.length < 6) {
-    setFieldFeedback("registerPasswordFeedback", "Password must be at least 6 characters.", "weak");
+    setFieldFeedback("registerPasswordFeedback", "Password must be at least 6 characters.", "error");
     valid = false;
   } else {
     updatePasswordFeedback(password);
