@@ -308,25 +308,27 @@ function renderCnn(payload) {
     $("#cnnResult").innerHTML = `<article class="result-card">${escapeHtml(payload.error || "No prediction returned.")}</article>`;
     return;
   }
-  const topLabels = (prediction.labels || [])
-    .map((label, index) => ({
-      label,
-      probability: prediction.probabilities?.[index] ?? 0,
-    }))
-    .sort((a, b) => b.probability - a.probability)
-    .slice(0, 5);
+
+  const sectorScores = (prediction.sector_scores || [])
+    .map((s) => `<li><b>${escapeHtml(s.sector)}</b>: ${Math.round(s.confidence * 100)}% &mdash; ${escapeHtml(s.description || "")}</li>`)
+    .join("");
+
+  const detectedObjects = (prediction.detected_objects || [])
+    .map((obj) => `<li>${escapeHtml(obj.object)}: ${(obj.confidence * 100).toFixed(1)}%</li>`)
+    .join("");
+
+  const insights = (prediction.venture_insights || [])
+    .map((tip) => `<li>${escapeHtml(tip)}</li>`)
+    .join("");
 
   $("#cnnResult").innerHTML = `
     <article class="result-card">
-      <strong>Predicted class</strong>
-      <p><b>${escapeHtml(prediction.predicted_label)}</b> (${Math.round((prediction.probabilities?.[prediction.predicted_index] ?? 0) * 100)}%)</p>
+      <strong>Suggested sector</strong>
+      <p><b>${escapeHtml(prediction.suggested_sector || "Unknown")}</b> (${Math.round((prediction.sector_confidence || 0) * 100)}% confidence)</p>
     </article>
-    <article class="result-card">
-      <strong>Top probabilities</strong>
-      <ul>${topLabels
-        .map((item) => `<li>${escapeHtml(item.label)}: ${(item.probability * 100).toFixed(1)}%</li>`)
-        .join("")}</ul>
-    </article>
+    ${insights ? `<article class="result-card"><strong>Venture insights</strong><ul>${insights}</ul></article>` : ""}
+    ${sectorScores ? `<article class="result-card"><strong>Sector breakdown</strong><ul>${sectorScores}</ul></article>` : ""}
+    ${detectedObjects ? `<article class="result-card"><strong>Detected objects</strong><ul>${detectedObjects}</ul></article>` : ""}
   `;
 }
 
@@ -577,7 +579,7 @@ async function predictCnn() {
     return;
   }
 
-  $("#cnnResult").innerHTML = `<article class="result-card">Running CNN prediction...</article>`;
+  $("#cnnResult").innerHTML = `<article class="result-card">Classifying venture sector...</article>`;
   try {
     const imageBase64 = await new Promise((resolve, reject) => {
       const reader = new FileReader();
