@@ -127,5 +127,5 @@ test("nlp analysis returns clarity score", async () => {
 test("ai-status reports local mode without API keys", async () => {
   const { data } = await api("/api/ai-status");
   assert.equal(data.enabled, false);
-  assert.equal(data.supabase_enabled, false);
+  assert.equal(data.supabase_enabled, undefined, "supabase_enabled hidden from unauthenticated requests");
 });
