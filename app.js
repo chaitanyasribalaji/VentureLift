@@ -371,6 +371,29 @@ function renderRoadmap(payload) {
   `;
 }
 
+function renderMarketAnalysis(payload) {
+  const result = payload.result;
+  const marketScore = result.market_score || 0;
+  const scoreColor = marketScore >= 75 ? "#4caf50" : marketScore >= 50 ? "#ff9800" : "#f44336";
+  
+  $("#marketAnalysisResult").innerHTML = `
+    <article class="result-card">
+      <div class="score" style="color: ${scoreColor}">${escapeHtml(marketScore)}</div>
+      <strong>Market demand analysis</strong>
+      <p><b>Market fit:</b> ${escapeHtml(result.market_fit || "unknown")}</p>
+      <p><b>Trend:</b> ${escapeHtml(result.trend_direction || "stable")}</p>
+    </article>
+    <article class="result-card">
+      <strong>Market metrics</strong>
+      <p>Average interest: <b>${escapeHtml(result.average_interest || "--")}%</b></p>
+      <p>Peak interest: <b>${escapeHtml(result.peak_interest || "--")}%</b></p>
+    </article>
+    ${result.keywords_analyzed ? `<article class="result-card"><strong>Keywords analyzed</strong><div class="tag-row">${result.keywords_analyzed.map((kw) => `<span>${escapeHtml(kw)}</span>`).join("")}</div></article>` : ""}
+    ${result.top_related ? `<article class="result-card"><strong>Related market topics</strong><div class="tag-row">${result.top_related.slice(0, 5).map((topic) => `<span>${escapeHtml(topic)}</span>`).join("")}</div></article>` : ""}
+    <article class="result-card"><strong>Insights</strong>${listItems(result.insights)}</article>
+  `;
+}
+
 function renderUsers(users) {
   $("#userList").innerHTML = users
     .map(
@@ -555,6 +578,27 @@ async function analyzeNlp() {
     body: JSON.stringify({ text }),
   });
   renderNlp(payload, payload.source);
+}
+
+async function analyzeMarketFit() {
+  if (!state.ventures.length || !state.selectedVenture) {
+    const marketResult = $("#marketAnalysisResult");
+    if (marketResult) marketResult.innerHTML = `<article class="result-card">Create or select a venture first.</article>`;
+    return;
+  }
+  const id = Number($("#ventureSelect").value);
+  const venture = state.ventures.find((item) => item.id === id) || state.selectedVenture;
+  const marketResult = $("#marketAnalysisResult");
+  if (marketResult) marketResult.innerHTML = `<article class="result-card">Analyzing market demand...</article>`;
+  try {
+    const payload = await api("/api/market-analysis", {
+      method: "POST",
+      body: JSON.stringify({ venture }),
+    });
+    if (marketResult) renderMarketAnalysis(payload);
+  } catch (error) {
+    if (marketResult) marketResult.innerHTML = `<article class="result-card">${escapeHtml(error.message)}</article>`;
+  }
 }
 
 async function askFaq() {
@@ -770,6 +814,7 @@ $("#ventureSearchInput").addEventListener("keydown", (event) => {
   if (event.key === "Enter") searchVentures();
 });
 $("#validateBtn").addEventListener("click", validateSelected);
+$("#marketBtn").addEventListener("click", analyzeMarketFit);
 $("#nlpBtn").addEventListener("click", analyzeNlp);
 $("#faqBtn").addEventListener("click", askFaq);
 $("#suggestionBtn").addEventListener("click", requestSuggestions);
