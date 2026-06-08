@@ -397,66 +397,76 @@ function renderRoadmap(payload) {
   `;
 }
 
+function renderCardList(selector, items, emptyHtml, cardFn) {
+  const target = $(selector);
+  if (!target) return;
+  if (!items.length) {
+    target.innerHTML = emptyHtml;
+    return;
+  }
+  target.innerHTML = items.map(cardFn).join("");
+}
+
+function userCard(user) {
+  return `
+    <article class="venture-card">
+      <h3>${escapeHtml(user.name)}</h3>
+      <p>${escapeHtml(user.email)}</p>
+      <div class="tag-row">
+        <span>${escapeHtml(user.role)}</span>
+        <span>${escapeHtml(user.expertise || "No expertise added")}</span>
+      </div>
+    </article>
+  `;
+}
+
+function mentorCard(mentor) {
+  return `
+    <article class="venture-card">
+      <h3>${escapeHtml(mentor.name)}</h3>
+      <p>${escapeHtml(mentor.email)}</p>
+      <div class="tag-row">
+        <span>mentor</span>
+        <span>${escapeHtml(mentor.expertise || "General startup support")}</span>
+      </div>
+    </article>
+  `;
+}
+
+function ventureSearchCard(venture) {
+  return `
+    <article class="venture-card">
+      <h3>${escapeHtml(venture.name)}</h3>
+      <p>${escapeHtml(venture.problem)}</p>
+      <div class="tag-row">
+        <span>${escapeHtml(venture.stage)}</span>
+        <span>${escapeHtml(venture.sector)}</span>
+        <span>${escapeHtml(venture.owner_name || venture.founder)}</span>
+      </div>
+    </article>
+  `;
+}
+
 function renderUsers(users) {
-  $("#userList").innerHTML = users
-    .map(
-      (user) => `
-        <article class="venture-card">
-          <h3>${escapeHtml(user.name)}</h3>
-          <p>${escapeHtml(user.email)}</p>
-          <div class="tag-row">
-            <span>${escapeHtml(user.role)}</span>
-            <span>${escapeHtml(user.expertise || "No expertise added")}</span>
-          </div>
-        </article>
-      `,
-    )
-    .join("");
+  renderCardList("#userList", users, "", userCard);
 }
 
 function renderMentors(mentors) {
-  const target = $("#mentorSearchResults");
-  if (!mentors.length) {
-    target.innerHTML = `<article class="venture-card"><h3>No mentors found</h3><p>Try a broader search like product, funding, AI, or marketing.</p></article>`;
-    return;
-  }
-  target.innerHTML = mentors
-    .map(
-      (mentor) => `
-        <article class="venture-card">
-          <h3>${escapeHtml(mentor.name)}</h3>
-          <p>${escapeHtml(mentor.email)}</p>
-          <div class="tag-row">
-            <span>mentor</span>
-            <span>${escapeHtml(mentor.expertise || "General startup support")}</span>
-          </div>
-        </article>
-      `,
-    )
-    .join("");
+  renderCardList(
+    "#mentorSearchResults",
+    mentors,
+    `<article class="venture-card"><h3>No mentors found</h3><p>Try a broader search like product, funding, AI, or marketing.</p></article>`,
+    mentorCard,
+  );
 }
 
 function renderVentureSearchResults(ventures) {
-  const target = $("#ventureSearchResults");
-  if (!ventures.length) {
-    target.innerHTML = `<article class="venture-card"><h3>No ventures found</h3><p>Try searching by stage, sector, founder, or customer.</p></article>`;
-    return;
-  }
-  target.innerHTML = ventures
-    .map(
-      (venture) => `
-        <article class="venture-card">
-          <h3>${escapeHtml(venture.name)}</h3>
-          <p>${escapeHtml(venture.problem)}</p>
-          <div class="tag-row">
-            <span>${escapeHtml(venture.stage)}</span>
-            <span>${escapeHtml(venture.sector)}</span>
-            <span>${escapeHtml(venture.owner_name || venture.founder)}</span>
-          </div>
-        </article>
-      `,
-    )
-    .join("");
+  renderCardList(
+    "#ventureSearchResults",
+    ventures,
+    `<article class="venture-card"><h3>No ventures found</h3><p>Try searching by stage, sector, founder, or customer.</p></article>`,
+    ventureSearchCard,
+  );
 }
 
 async function loadSession() {
@@ -507,26 +517,23 @@ async function loadVentures() {
   renderVentureSelect();
 }
 
-async function searchMentors() {
-  const query = $("#mentorSearchInput").value.trim();
-  $("#mentorSearchResults").innerHTML = `<article class="venture-card">Searching mentors...</article>`;
+async function searchWithLoading(inputSelector, resultSelector, loadingText, apiPath, dataKey, renderFn) {
+  const query = $(inputSelector).value.trim();
+  $(resultSelector).innerHTML = `<article class="venture-card">${loadingText}</article>`;
   try {
-    const data = await api(`/api/mentors?q=${encodeURIComponent(query)}`);
-    renderMentors(data.mentors);
+    const data = await api(`${apiPath}?q=${encodeURIComponent(query)}`);
+    renderFn(data[dataKey]);
   } catch (error) {
-    $("#mentorSearchResults").innerHTML = `<article class="venture-card">${escapeHtml(error.message)}</article>`;
+    $(resultSelector).innerHTML = `<article class="venture-card">${escapeHtml(error.message)}</article>`;
   }
 }
 
+async function searchMentors() {
+  await searchWithLoading("#mentorSearchInput", "#mentorSearchResults", "Searching mentors...", "/api/mentors", "mentors", renderMentors);
+}
+
 async function searchVentures() {
-  const query = $("#ventureSearchInput").value.trim();
-  $("#ventureSearchResults").innerHTML = `<article class="venture-card">Searching ventures...</article>`;
-  try {
-    const data = await api(`/api/ventures?q=${encodeURIComponent(query)}`);
-    renderVentureSearchResults(data.ventures);
-  } catch (error) {
-    $("#ventureSearchResults").innerHTML = `<article class="venture-card">${escapeHtml(error.message)}</article>`;
-  }
+  await searchWithLoading("#ventureSearchInput", "#ventureSearchResults", "Searching ventures...", "/api/ventures", "ventures", renderVentureSearchResults);
 }
 
 function loadSearchDefaults() {
