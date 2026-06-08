@@ -39,8 +39,11 @@ const server = createServer(async (request, response) => {
     if (url.pathname.startsWith("/api/") && (await routeApi(request, response, url))) return;
     await routeStatic(response, url.pathname);
   } catch (error) {
-    response.writeHead(500, { "Content-Type": "application/json; charset=utf-8" });
-    response.end(JSON.stringify({ error: error.message }));
+    const status = error.statusCode || 500;
+    if (!response.headersSent) {
+      response.writeHead(status, { "Content-Type": "application/json; charset=utf-8" });
+      response.end(JSON.stringify({ error: error.message }));
+    }
   }
 });
 

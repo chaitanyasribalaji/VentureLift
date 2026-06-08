@@ -14,8 +14,11 @@ export default async function handler(req, res) {
       res.end(JSON.stringify({ error: "Not found" }));
     }
   } catch (error) {
-    res.statusCode = 500;
-    res.setHeader("Content-Type", "application/json; charset=utf-8");
-    res.end(JSON.stringify({ error: error.message || "Internal Server Error" }));
+    const status = error.statusCode || 500;
+    if (!res.headersSent) {
+      res.statusCode = status;
+      res.setHeader("Content-Type", "application/json; charset=utf-8");
+      res.end(JSON.stringify({ error: error.message || "Internal Server Error" }));
+    }
   }
 }
