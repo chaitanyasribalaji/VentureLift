@@ -1,5 +1,4 @@
-tensorflow>=2.12.0
-scikit-learn>=1.2.2
-numpy>=1.24.0
-pillow>=9.4.0
-pytest>=7.4.0
+# Python dependencies for local ML development only.
+# These are NOT installed during Netlify builds.
+# For local model training and prediction scripts, use:
+#   pip install -r requirements-dev.txt
