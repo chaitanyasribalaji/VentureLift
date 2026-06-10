@@ -44,7 +44,7 @@ const server = createServer(async (request, response) => {
   }
 });
 
-server.listen(PORT, "127.0.0.1", () => {
+server.listen(PORT, "0.0.0.0", () => {
   const { port } = server.address();
-  console.log(`Venture platform running at http://127.0.0.1:${port}`);
+  console.log(`Venture platform running at http://0.0.0.0:${port}`);
 });
