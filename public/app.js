@@ -638,142 +638,50 @@ function updateRoadmapState() {
 }
 
 /* ========================================================
-   REACT RESOLUTION STUDIO & VIEWPORT ADAPTER
+   ADAPTIVE DEVICE RESOLUTION & VIEWPORT CONTROLLER
    ======================================================== */
 
-function gcd(a, b) {
-  return b === 0 ? a : gcd(b, a % b);
-}
+function initAdaptiveDeviceLayout() {
+  function updateDeviceClasses() {
+    const width = typeof window !== "undefined" ? window.innerWidth : 1200;
+    const height = typeof window !== "undefined" ? window.innerHeight : 800;
+    const orientation = width >= height ? "orientation-landscape" : "orientation-portrait";
 
-function ResolutionStudio() {
-  const [viewport, setViewport] = React.useState({
-    width: typeof window !== "undefined" ? window.innerWidth : 1200,
-    height: typeof window !== "undefined" ? window.innerHeight : 800,
-    dpr: typeof window !== "undefined" ? (window.devicePixelRatio || 1) : 1,
-    orientation: typeof window !== "undefined" && window.innerWidth > window.innerHeight ? "Landscape" : "Portrait",
-  });
-  const [activePreset, setActivePreset] = React.useState("auto");
-  const [density, setDensity] = React.useState("comfortable");
+    document.body.classList.remove(
+      "device-mobile",
+      "device-tablet",
+      "device-laptop",
+      "device-desktop",
+      "device-ultrawide",
+      "orientation-portrait",
+      "orientation-landscape"
+    );
 
-  React.useEffect(() => {
-    function handleResize() {
-      const w = window.innerWidth;
-      const h = window.innerHeight;
-      const dpr = window.devicePixelRatio || 1;
-      const orient = w > h ? "Landscape" : "Portrait";
-      setViewport({ width: w, height: h, dpr, orientation: orient });
+    let deviceClass = "device-desktop";
+    if (width <= 480) {
+      deviceClass = "device-mobile";
+    } else if (width <= 768) {
+      deviceClass = "device-tablet";
+    } else if (width <= 1024) {
+      deviceClass = "device-laptop";
+    } else if (width <= 1440) {
+      deviceClass = "device-desktop";
+    } else {
+      deviceClass = "device-ultrawide";
     }
-    window.addEventListener("resize", handleResize);
-    window.addEventListener("orientationchange", handleResize);
-    return () => {
-      window.removeEventListener("resize", handleResize);
-      window.removeEventListener("orientationchange", handleResize);
-    };
-  }, []);
 
-  React.useEffect(() => {
-    document.body.classList.remove("sim-mobile", "sim-tablet", "sim-laptop", "sim-desktop");
-    if (activePreset !== "auto") {
-      document.body.classList.add(`sim-${activePreset}`);
-    }
-  }, [activePreset]);
+    document.body.classList.add(deviceClass, orientation);
+  }
 
-  React.useEffect(() => {
-    document.body.classList.remove("density-compact", "density-comfortable", "density-spacious");
-    document.body.classList.add(`density-${density}`);
-  }, [density]);
-
-  const getBreakpoint = (width) => {
-    if (width <= 480) return { label: "Mobile (XS)", code: "XS", icon: "📱" };
-    if (width <= 768) return { label: "Tablet / Phablet (SM)", code: "SM", icon: "📱" };
-    if (width <= 1024) return { label: "Laptop / Medium (MD)", code: "MD", icon: "💻" };
-    if (width <= 1440) return { label: "Desktop HD (LG)", code: "LG", icon: "🖥️" };
-    return { label: "Ultra-wide 4K (XL)", code: "XL", icon: "🖥️" };
-  };
-
-  const bp = getBreakpoint(viewport.width);
-  const divisor = gcd(viewport.width, viewport.height);
-  const aspectRatio = divisor > 0 ? `${Math.round(viewport.width / divisor)}:${Math.round(viewport.height / divisor)}` : "16:9";
-
-  const h = React.createElement;
-
-  return h("aside", { className: "react-resolution-studio", "aria-label": "Adaptive Resolution Studio" },
-    h("div", { className: "react-res-header" },
-      h("div", { className: "react-res-title-group" },
-        h("div", { className: "react-res-badge-icon" }, "⚛"),
-        h("h3", { className: "react-res-title" }, "Adaptive Viewport & Resolution Studio")
-      ),
-      h("div", { className: "react-res-pill" },
-        h("span", { className: "react-res-pill-dot" }),
-        h("span", null, `${bp.icon} ${bp.label} • ${viewport.width}×${viewport.height}px (${viewport.dpr.toFixed(1)}x DPR)`)
-      )
-    ),
-    h("div", { className: "react-res-body" },
-      h("div", { className: "react-res-metrics-row" },
-        h("div", { className: "react-res-metric-item" },
-          h("span", { className: "react-res-metric-label" }, "Viewport Resolution"),
-          h("span", { className: "react-res-metric-value" }, `${viewport.width} × ${viewport.height} px`)
-        ),
-        h("div", { className: "react-res-metric-item" },
-          h("span", { className: "react-res-metric-label" }, "Aspect Ratio"),
-          h("span", { className: "react-res-metric-value" }, aspectRatio)
-        ),
-        h("div", { className: "react-res-metric-item" },
-          h("span", { className: "react-res-metric-label" }, "Orientation"),
-          h("span", { className: "react-res-metric-value" }, viewport.orientation)
-        ),
-        h("div", { className: "react-res-metric-item" },
-          h("span", { className: "react-res-metric-label" }, "Scale / Density"),
-          h("span", { className: "react-res-metric-value" }, `${viewport.dpr.toFixed(1)}x Retina / HiDPI`)
-        )
-      ),
-      h("div", { className: "react-res-toolbar" },
-        h("span", { style: { fontSize: "0.72rem", color: "#8b949e", textTransform: "uppercase", fontWeight: "600", marginRight: "4px" } }, "Simulate:"),
-        [
-          { id: "auto", label: "Auto (100%)" },
-          { id: "mobile", label: "Mobile (375px)" },
-          { id: "tablet", label: "Tablet (768px)" },
-          { id: "laptop", label: "Laptop (1024px)" },
-          { id: "desktop", label: "Desktop (1440px)" },
-        ].map((preset) =>
-          h("button", {
-            key: preset.id,
-            type: "button",
-            className: `react-res-btn ${activePreset === preset.id ? "active" : ""}`,
-            onClick: () => setActivePreset(preset.id),
-          }, preset.label)
-        ),
-        h("span", { style: { fontSize: "0.72rem", color: "#8b949e", textTransform: "uppercase", fontWeight: "600", marginLeft: "10px", marginRight: "4px" } }, "Density:"),
-        [
-          { id: "compact", label: "Compact" },
-          { id: "comfortable", label: "Comfortable" },
-          { id: "spacious", label: "Spacious" },
-        ].map((d) =>
-          h("button", {
-            key: d.id,
-            type: "button",
-            className: `react-res-btn ${density === d.id ? "active" : ""}`,
-            onClick: () => setDensity(d.id),
-          }, d.label)
-        )
-      )
-    )
-  );
+  if (typeof window !== "undefined") {
+    window.addEventListener("resize", updateDeviceClasses, { passive: true });
+    window.addEventListener("orientationchange", updateDeviceClasses, { passive: true });
+    updateDeviceClasses();
+  }
 }
 
 function initReactApp() {
-  const container = document.getElementById("reactResolutionStudio");
-  if (!container || typeof window.React === "undefined" || typeof window.ReactDOM === "undefined") return;
-  try {
-    if (ReactDOM.createRoot) {
-      const root = ReactDOM.createRoot(container);
-      root.render(React.createElement(ResolutionStudio));
-    } else if (ReactDOM.render) {
-      ReactDOM.render(React.createElement(ResolutionStudio), container);
-    }
-  } catch (error) {
-    console.warn("React Resolution Studio mount error:", error);
-  }
+  initAdaptiveDeviceLayout();
 }
 
 

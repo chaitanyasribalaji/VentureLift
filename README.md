@@ -50,13 +50,12 @@ npm start
 
 If you prefer a different variable name, the server also accepts `ADVANCED_AI_API_KEY` as an alias for `OPENAI_API_KEY`.
 
-## React Adaptive Resolution Studio & Responsive Architecture
+## Device-Adaptive Responsive Architecture
 
-The platform features an integrated **React Resolution Studio** that dynamically adapts to every device screen size:
-- **Real-Time Viewport Telemetry**: Actively monitors window dimensions, aspect ratio, device classification (Mobile XS, Tablet SM, Laptop MD, Desktop LG, Ultra-wide XL), orientation, and Retina / HiDPI pixel density.
-- **Interactive Device Simulation**: Test layouts directly from the dashboard across standard device breakpoints (Mobile 375px, Tablet 768px, Laptop 1024px, Desktop 1440px).
-- **Dynamic Density Controls**: Adjust UI spacing between Compact, Comfortable, and Spacious modes.
-- **Full Cross-Resolution Optimization**: Fluid styling from 320px mobile up to 4K ultra-wide monitors.
+The platform features a seamless, native adaptive design system that automatically detects and adjusts to any device:
+- **Automatic Device Classification**: Automatically detects Mobile (`<=480px`), Tablet (`481px-768px`), Laptop (`769px-1024px`), Desktop (`1025px-1440px`), and Ultra-wide 4K (`>1440px`).
+- **Dynamic Orientation Awareness**: Reacts instantly to screen rotation between portrait and landscape modes.
+- **Fluid Layout & Typography**: Optimized touch targets ($\ge 44\text{px}$) and reflow grids for smartphones, tablets, laptops, and wide monitors with zero UI clutter.
 
 ## Automated Test Suites
 
