@@ -1,0 +1,1131 @@
+const state = {
+  user: null,
+  ventures: [],
+  selectedVenture: null,
+  latestScore: null,
+};
+
+const $ = (selector) => document.querySelector(selector);
+const $$ = (selector) => [...document.querySelectorAll(selector)];
+
+async function api(path, options = {}) {
+  const response = await fetch(path, {
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
+    ...options,
+  });
+
+  const responseText = await response.text();
+  let data;
+  try {
+    data = responseText ? JSON.parse(responseText) : {};
+  } catch (error) {
+    const message = responseText.trim() || response.statusText || "Request failed";
+    if (!response.ok) {
+      console.warn("API error", path, response.status, message, responseText);
+      throw new Error(message);
+    }
+    throw new Error(message);
+  }
+
+  if (!response.ok) {
+    const message = data?.error || response.statusText || "Request failed";
+    console.warn("API error", path, response.status, message, responseText);
+    throw new Error(message);
+  }
+  return data;
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function isEmailValid(email) {
+  const trimmed = String(email || "").trim();
+  if (!trimmed) return false;
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed);
+}
+
+function isNameValid(name) {
+  return /^[A-Za-z][A-Za-z0-9 '\-\.]*$/.test(String(name || "").trim());
+}
+
+function passwordStrength(password) {
+  const value = String(password || "").trim();
+  let score = 0;
+  if (value.length >= 6) score += 20;
+  if (value.length >= 10) score += 15;
+  if (/[a-z]/.test(value)) score += 20;
+  if (/[A-Z]/.test(value)) score += 20;
+  if (/[0-9]/.test(value)) score += 15;
+  if (/[^A-Za-z0-9]/.test(value)) score += 10;
+  score = Math.min(100, score);
+  if (!value) return { score: 0, label: "" };
+  if (score >= 75) return { score, label: "Strong" };
+  if (score >= 45) return { score, label: "Medium" };
+  return { score, label: "Weak" };
+}
+
+function setFieldFeedback(elementId, message, level = "error") {
+  const element = $(`#${elementId}`);
+  if (!element) return;
+  element.textContent = message;
+  element.classList.remove("strong", "medium", "weak", "error");
+  if (level) element.classList.add(level);
+}
+
+function clearFieldFeedback(elementId) {
+  const element = $(`#${elementId}`);
+  if (!element) return;
+  element.textContent = "";
+  element.classList.remove("strong", "medium", "weak", "error");
+}
+
+function updatePasswordFeedback(password) {
+  const feedbackId = "registerPasswordFeedback";
+  if (!$( `#${feedbackId}` )) return;
+  if (!password) {
+    setFieldFeedback(feedbackId, "Password should be at least 6 characters.", "weak");
+    return;
+  }
+  const strength = passwordStrength(password);
+  setFieldFeedback(feedbackId, `${strength.label} password strength`, strength.label.toLowerCase());
+}
+
+function validateLoginForm(form) {
+  clearFieldFeedback("loginEmailFeedback");
+  clearFieldFeedback("loginPasswordFeedback");
+  let valid = true;
+  const email = String(form.email.value || "").trim();
+  const password = String(form.password.value || "").trim();
+
+  if (!email) {
+    setFieldFeedback("loginEmailFeedback", "Email is required.", "error");
+    valid = false;
+  } else if (!isEmailValid(email)) {
+    setFieldFeedback("loginEmailFeedback", "Enter a valid email address.", "error");
+    valid = false;
+  }
+
+  if (!password) {
+    setFieldFeedback("loginPasswordFeedback", "Password is required.", "error");
+    valid = false;
+  } else if (password.length < 6) {
+    setFieldFeedback("loginPasswordFeedback", "Password must be at least 6 characters.", "error");
+    valid = false;
+  }
+
+  return valid;
+}
+
+function validateRegisterForm(form) {
+  clearFieldFeedback("registerNameFeedback");
+  clearFieldFeedback("registerEmailFeedback");
+  clearFieldFeedback("registerPasswordFeedback");
+  let valid = true;
+  const name = String(form.name.value || "").trim();
+  const email = String(form.email.value || "").trim();
+  const password = String(form.password.value || "").trim();
+
+  if (!name) {
+    setFieldFeedback("registerNameFeedback", "Name is required.", "error");
+    valid = false;
+  } else if (!isNameValid(name)) {
+    setFieldFeedback("registerNameFeedback", "Name must start with a letter and not begin with a number.", "error");
+    valid = false;
+  }
+
+  if (!email) {
+    setFieldFeedback("registerEmailFeedback", "Email is required.", "error");
+    valid = false;
+  } else if (!isEmailValid(email)) {
+    setFieldFeedback("registerEmailFeedback", "Enter a valid email address.", "error");
+    valid = false;
+  }
+
+  if (!password) {
+    setFieldFeedback("registerPasswordFeedback", "Password is required.", "error");
+    valid = false;
+  } else if (password.length < 6) {
+    setFieldFeedback("registerPasswordFeedback", "Password must be at least 6 characters.", "error");
+    valid = false;
+  } else {
+    updatePasswordFeedback(password);
+  }
+
+  return valid;
+}
+
+function listItems(items) {
+  if (!Array.isArray(items)) return "";
+  return `<ul>${items.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`;
+}
+
+function selectedVenture() {
+  const id = Number($("#ventureSelect").value);
+  return state.ventures.find((item) => item.id === id) || state.selectedVenture || state.ventures[0] || null;
+}
+
+function switchView(viewId) {
+  const tab = $(`.tab[data-view="${viewId}"]`);
+  if (tab?.classList.contains("hidden")) viewId = "dashboard";
+  $$(".tab").forEach((item) => item.classList.toggle("active", item.dataset.view === viewId));
+  $$(".view").forEach((view) => view.classList.toggle("active", view.id === viewId));
+  if (viewId === "mentor") loadSearchDefaults();
+  if (viewId === "ai") loadAiStatus();
+}
+
+function switchAuth(type) {
+  $$(".auth-tab").forEach((tab) => tab.classList.toggle("active", tab.dataset.auth === type));
+  $$(".auth-form").forEach((form) => form.classList.toggle("active", form.id === `${type}Form`));
+}
+
+function applyRoleUi() {
+  const role = state.user?.role;
+  $("#authScreen").classList.toggle("hidden", Boolean(state.user));
+  $("#appShell").classList.toggle("hidden", !state.user);
+  if (!state.user) {
+    switchView("dashboard");
+    $("#loginStatus").textContent = "";
+    $("#registerStatus").textContent = "";
+    return;
+  }
+
+  $("#roleLine").textContent = `${state.user.name} - ${role.toUpperCase()} account`;
+  $$(".founder-only, .mentor-only, .admin-only").forEach((node) => {
+    const allowedRoles = [];
+    if (node.classList.contains("founder-only")) allowedRoles.push("founder");
+    if (node.classList.contains("mentor-only")) allowedRoles.push("mentor");
+    if (node.classList.contains("admin-only")) allowedRoles.push("admin");
+    node.classList.toggle("hidden", !allowedRoles.includes(role));
+  });
+
+  const title = role === "mentor" ? "Mentor command center" : role === "admin" ? "Admin command center" : "Founder command center";
+  $("#commandTitle").textContent = title;
+  $("#roleCards").innerHTML = roleCards(role);
+}
+
+function roleCards(role) {
+  const cards = {
+    founder: [
+      ["Discover", "Customer pain, market size, alternatives"],
+      ["Validate", "Experiments, interviews, proof"],
+      ["Launch", "MVP, early users, traction"],
+      ["Fund", "Pitch, grants, investor readiness"],
+    ],
+    mentor: [
+      ["Review", "Study founder ventures and identify key risks"],
+      ["Advise", "Suggest experiments, milestones, and customer evidence"],
+      ["Match", "Connect founders with programs, experts, and funders"],
+      ["Track", "Follow venture progress across stages"],
+    ],
+    admin: [
+      ["Manage users", "View founder, mentor, and admin accounts"],
+      ["Monitor ventures", "See all platform venture profiles"],
+      ["Coordinate mentors", "Route ventures to the right expertise"],
+      ["Govern platform", "Keep roles and workflows organized"],
+    ],
+  };
+  return cards[role].map(([label, detail]) => `<div><strong>${label}</strong><span>${detail}</span></div>`).join("");
+}
+
+function renderDashboard() {
+  $("#ventureCount").textContent = state.ventures.length;
+  $("#avgScore").textContent = state.latestScore ? `${state.latestScore}/100` : "--";
+  const stageCounts = state.ventures.reduce((acc, venture) => {
+    acc[venture.stage] = (acc[venture.stage] || 0) + 1;
+    return acc;
+  }, {});
+  const topStage = Object.entries(stageCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || "Idea";
+  $("#stageFocus").textContent = topStage;
+
+  const list = $("#ventureList");
+  if (!state.ventures.length) {
+    list.innerHTML = `<div class="venture-card"><h3>No ventures yet</h3><p>${emptyPortfolioText()}</p></div>`;
+    return;
+  }
+
+  list.innerHTML = state.ventures
+    .map(
+      (venture) => `
+        <article class="venture-card">
+          <h3>${escapeHtml(venture.name)}</h3>
+          <p>${escapeHtml(venture.problem).slice(0, 170)}${venture.problem.length > 170 ? "..." : ""}</p>
+          <div class="tag-row">
+            <span>${escapeHtml(venture.stage)}</span>
+            <span>${escapeHtml(venture.sector)}</span>
+            <span>${escapeHtml(venture.traction)}</span>
+            ${venture.owner_name ? `<span>${escapeHtml(venture.owner_name)}</span>` : ""}
+          </div>
+        </article>
+      `,
+    )
+    .join("");
+}
+
+function emptyPortfolioText() {
+  if (state.user?.role === "founder") return "Create your first venture profile to activate the platform.";
+  return "No founder ventures are available for review yet.";
+}
+
+function renderVentureSelect() {
+  const select = $("#ventureSelect");
+  const cnnSelect = $("#cnnVentureSelect");
+  if (!state.ventures.length) {
+    if (select) select.innerHTML = `<option>No ventures available</option>`;
+    if (cnnSelect) cnnSelect.innerHTML = `<option value="">No venture selected</option>`;
+    state.selectedVenture = null;
+    updateRoadmapState();
+    return;
+  }
+  const optionsHtml = state.ventures.map((venture) => `<option value="${venture.id}">${escapeHtml(venture.name)}</option>`).join("");
+  if (select) select.innerHTML = optionsHtml;
+  if (cnnSelect) cnnSelect.innerHTML = `<option value="">General Prototype (No venture linked)</option>` + optionsHtml;
+  state.selectedVenture = state.ventures[0];
+  updateRoadmapState();
+}
+
+function renderValidation(payload, source) {
+  const result = payload.result;
+  state.latestScore = result.score;
+  renderDashboard();
+  updateRoadmapState();
+  $("#validationResult").innerHTML = `
+    <article class="result-card">
+      <div class="score">${escapeHtml(result.score || "--")}</div>
+      <strong>Venture validation</strong>
+      <p>${escapeHtml(result.summary || "")}</p>
+    </article>
+    <article class="result-card"><strong>Strengths</strong>${listItems(result.strengths)}</article>
+    <article class="result-card"><strong>Risks</strong>${listItems(result.risks)}</article>
+    <article class="result-card"><strong>Experiments</strong>${listItems(result.experiments)}</article>
+    <article class="result-card"><strong>Next 30 days</strong>${listItems(result.next_30_days)}</article>
+  `;
+}
+
+function renderCnn(payload) {
+  const prediction = payload.prediction;
+  if (!prediction) {
+    $("#cnnResult").innerHTML = `<article class="result-card">${escapeHtml(payload.error || "No prediction returned.")}</article>`;
+    return;
+  }
+  const topLabels = (prediction.labels || [])
+    .map((label, index) => ({
+      label,
+      probability: prediction.probabilities?.[index] ?? 0,
+    }))
+    .sort((a, b) => b.probability - a.probability)
+    .slice(0, 5);
+
+  $("#cnnResult").innerHTML = `
+    <article class="result-card">
+      <strong>Predicted class</strong>
+      <p><b>${escapeHtml(prediction.predicted_label)}</b> (${Math.round((prediction.probabilities?.[prediction.predicted_index] ?? 0) * 100)}%)</p>
+    </article>
+    <article class="result-card">
+      <strong>Top probabilities</strong>
+      <ul>${topLabels
+        .map((item) => `<li>${escapeHtml(item.label)}: ${(item.probability * 100).toFixed(1)}%</li>`)
+        .join("")}</ul>
+    </article>
+  `;
+}
+
+function renderNlp(payload, source) {
+  const result = payload.result;
+  $("#nlpResult").innerHTML = `
+    <article class="result-card">
+      <strong>${source === "openai" ? "AI NLP analysis" : "Local NLP fallback"}</strong>
+      <p>Clarity score: <b>${escapeHtml(result.clarity_score || "--")}/100</b></p>
+      <p>Sentiment: ${escapeHtml(result.sentiment || "")}</p>
+    </article>
+    <article class="result-card"><strong>Keywords</strong><div class="tag-row">${(result.keywords || [])
+      .map((item) => `<span>${escapeHtml(item)}</span>`)
+      .join("")}</div></article>
+    <article class="result-card"><strong>Market signals</strong>${listItems(result.market_signals)}</article>
+    <article class="result-card"><strong>Missing information</strong>${listItems(result.missing_information)}</article>
+    <article class="result-card"><strong>Improved statement</strong><p>${escapeHtml(result.improved_statement || "")}</p></article>
+  `;
+}
+
+function renderFaq(payload) {
+  const result = payload.result;
+  $("#faqResult").innerHTML = `
+    <article class="result-card">
+      <strong>${payload.source === "openai" ? "AI FAQ answer" : "Local FAQ answer"}</strong>
+      <p>${escapeHtml(result.answer)}</p>
+    </article>
+    <article class="result-card"><strong>Next steps</strong>${listItems(result.next_steps)}</article>
+    <article class="result-card"><strong>Related topics</strong><div class="tag-row">${(result.related_topics || [])
+      .map((topic) => `<span>${escapeHtml(topic)}</span>`)
+      .join("")}</div></article>
+  `;
+}
+
+function renderSuggestions(payload) {
+  const result = payload.result;
+  $("#suggestionResult").innerHTML = `
+    <article class="result-card">
+      <strong>${payload.source === "openai" ? "AI suggestion" : "Local suggestion"}</strong>
+      <p>${escapeHtml(result.reply)}</p>
+    </article>
+    <article class="result-card"><strong>Action items</strong>${listItems(result.action_items)}</article>
+    <article class="result-card"><strong>Risks to watch</strong>${listItems(result.risks_to_watch)}</article>
+    <article class="result-card"><strong>Mentor angle</strong><p>${escapeHtml(result.mentor_angle)}</p></article>
+  `;
+}
+
+function renderRoadmap(payload) {
+  const result = payload.result;
+  $("#roadmapResult").innerHTML = `
+    <article class="result-card">
+      <strong>${payload.source === "openai" ? "AI roadmap" : "Local roadmap"}</strong>
+      <p>${escapeHtml(result.summary)}</p>
+    </article>
+    ${(result.weeks || [])
+      .map(
+        (week) => `
+          <article class="result-card">
+            <strong>${escapeHtml(week.period)}: ${escapeHtml(week.focus)}</strong>
+            ${listItems(week.tasks)}
+          </article>
+        `,
+      )
+      .join("")}
+    <article class="result-card"><strong>Milestones</strong>${listItems(result.milestones)}</article>
+    <article class="result-card"><strong>Metrics</strong>${listItems(result.metrics)}</article>
+    <article class="result-card"><strong>Funding readiness</strong>${listItems(result.funding_readiness)}</article>
+  `;
+}
+
+function renderUsers(users) {
+  $("#userList").innerHTML = users
+    .map(
+      (user) => `
+        <article class="venture-card">
+          <h3>${escapeHtml(user.name)}</h3>
+          <p>${escapeHtml(user.email)}</p>
+          <div class="tag-row">
+            <span>${escapeHtml(user.role)}</span>
+            <span>${escapeHtml(user.expertise || "No expertise added")}</span>
+          </div>
+        </article>
+      `,
+    )
+    .join("");
+}
+
+function renderMentors(mentors) {
+  const target = $("#mentorSearchResults");
+  if (!mentors.length) {
+    target.innerHTML = `<article class="venture-card"><h3>No mentors found</h3><p>Try a broader search like product, funding, AI, or marketing.</p></article>`;
+    return;
+  }
+  target.innerHTML = mentors
+    .map(
+      (mentor) => `
+        <article class="venture-card">
+          <h3>${escapeHtml(mentor.name)}</h3>
+          <p>${escapeHtml(mentor.email)}</p>
+          <div class="tag-row">
+            <span>mentor</span>
+            <span>${escapeHtml(mentor.expertise || "General startup support")}</span>
+          </div>
+        </article>
+      `,
+    )
+    .join("");
+}
+
+function renderVentureSearchResults(ventures) {
+  const target = $("#ventureSearchResults");
+  if (!ventures.length) {
+    target.innerHTML = `<article class="venture-card"><h3>No ventures found</h3><p>Try searching by stage, sector, founder, or customer.</p></article>`;
+    return;
+  }
+  target.innerHTML = ventures
+    .map(
+      (venture) => `
+        <article class="venture-card">
+          <h3>${escapeHtml(venture.name)}</h3>
+          <p>${escapeHtml(venture.problem)}</p>
+          <div class="tag-row">
+            <span>${escapeHtml(venture.stage)}</span>
+            <span>${escapeHtml(venture.sector)}</span>
+            <span>${escapeHtml(venture.owner_name || venture.founder)}</span>
+          </div>
+        </article>
+      `,
+    )
+    .join("");
+}
+
+async function loadSession() {
+  const data = await api("/api/me");
+  state.user = data.user;
+  applyRoleUi();
+  if (state.user) await loadVentures();
+}
+
+function setAiStatus(enabled, provider, model) {
+  const status = $("#aiStatus");
+  if (!status) return;
+  if (enabled) {
+    const providerLabel = provider === "groq" ? "Groq enabled" : "OpenAI enabled";
+    status.textContent = `${providerLabel} — model: ${model}`;
+  } else {
+    status.textContent = "Idea validation is available locally.";
+  }
+  status.classList.toggle("active", enabled);
+}
+
+async function loadAiStatus() {
+  try {
+    const data = await api("/api/ai-status");
+    setAiStatus(data.enabled, data.provider, data.model);
+  } catch (error) {
+    const status = $("#aiStatus");
+    if (status) status.textContent = "Unable to determine AI status.";
+  }
+}
+
+async function login(email, password) {
+  const data = await api("/api/login", {
+    method: "POST",
+    body: JSON.stringify({ email, password }),
+  });
+  state.user = data.user;
+  $("#loginStatus").textContent = "";
+  applyRoleUi();
+  await loadVentures();
+  switchView("dashboard");
+}
+
+async function loadVentures() {
+  const data = await api("/api/ventures");
+  state.ventures = data.ventures;
+  renderDashboard();
+  renderVentureSelect();
+}
+
+async function searchMentors() {
+  const query = $("#mentorSearchInput").value.trim();
+  $("#mentorSearchResults").innerHTML = `<article class="venture-card">Searching mentors...</article>`;
+  try {
+    const data = await api(`/api/mentors?q=${encodeURIComponent(query)}`);
+    renderMentors(data.mentors);
+  } catch (error) {
+    $("#mentorSearchResults").innerHTML = `<article class="venture-card">${escapeHtml(error.message)}</article>`;
+  }
+}
+
+async function searchVentures() {
+  const query = $("#ventureSearchInput").value.trim();
+  $("#ventureSearchResults").innerHTML = `<article class="venture-card">Searching ventures...</article>`;
+  try {
+    const data = await api(`/api/ventures?q=${encodeURIComponent(query)}`);
+    renderVentureSearchResults(data.ventures);
+  } catch (error) {
+    $("#ventureSearchResults").innerHTML = `<article class="venture-card">${escapeHtml(error.message)}</article>`;
+  }
+}
+
+function loadSearchDefaults() {
+  if (!state.user) return;
+  if (["founder", "admin"].includes(state.user.role)) searchMentors();
+  if (["mentor", "admin"].includes(state.user.role)) searchVentures();
+}
+
+async function saveVenture(event) {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const payload = Object.fromEntries(new FormData(form).entries());
+  $("#saveStatus").textContent = "Saving...";
+  try {
+    await api("/api/ventures", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+    form.reset();
+    $("#saveStatus").textContent = "Venture saved to the database.";
+    await loadVentures();
+    switchView("ai");
+  } catch (error) {
+    $("#saveStatus").textContent = error.message;
+  }
+}
+
+async function validateSelected() {
+  if (!state.ventures.length || !state.selectedVenture) {
+    $("#validationResult").innerHTML = `<article class="result-card">Create or select a venture first.</article>`;
+    return;
+  }
+  const id = Number($("#ventureSelect").value);
+  const venture = state.ventures.find((item) => item.id === id) || state.selectedVenture;
+  $("#validationResult").innerHTML = `<article class="result-card">Running validation...</article>`;
+  const payload = await api("/api/validate", {
+    method: "POST",
+    body: JSON.stringify({ venture }),
+  });
+  renderValidation(payload, payload.source);
+}
+
+async function predictCnn() {
+  const fileInput = $("#cnnImageInput");
+  const file = fileInput?.files?.[0];
+  if (!file) {
+    $("#cnnResult").innerHTML = `<article class="result-card">Choose an image first.</article>`;
+    return;
+  }
+
+  $("#cnnResult").innerHTML = `<article class="result-card">Running CNN prediction...</article>`;
+  try {
+    const imageBase64 = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = String(reader.result || "");
+        const commaIndex = result.indexOf(",");
+        resolve(commaIndex === -1 ? result : result.slice(commaIndex + 1));
+      };
+      reader.onerror = () => reject(new Error("Unable to read image file."));
+      reader.readAsDataURL(file);
+    });
+
+    const payload = await api("/api/cnn-predict", {
+      method: "POST",
+      body: JSON.stringify({ image_base64: imageBase64 }),
+    });
+    renderCnn(payload);
+  } catch (error) {
+    $("#cnnResult").innerHTML = `<article class="result-card">${escapeHtml(error.message)}</article>`;
+  }
+}
+
+function handleCnnImageChange(event) {
+  const file = event.target.files?.[0];
+  const preview = $("#cnnPreview");
+  const button = $("#cnnPredictBtn");
+  if (!file) {
+    preview.classList.add("hidden");
+    preview.removeAttribute("src");
+    if (button) button.disabled = true;
+    return;
+  }
+  preview.src = URL.createObjectURL(file);
+  preview.classList.remove("hidden");
+  if (button) button.disabled = false;
+}
+
+async function analyzeNlp() {
+  const text = $("#nlpText").value.trim();
+  if (!text) {
+    $("#nlpResult").innerHTML = `<article class="result-card">Paste text to analyze.</article>`;
+    return;
+  }
+  $("#nlpResult").innerHTML = `<article class="result-card">Analyzing language...</article>`;
+  const payload = await api("/api/nlp", {
+    method: "POST",
+    body: JSON.stringify({ text }),
+  });
+  renderNlp(payload, payload.source);
+}
+
+async function askFaq() {
+  const question = $("#faqQuestion").value.trim();
+  if (!question) {
+    $("#faqResult").innerHTML = `<article class="result-card">Type a question first.</article>`;
+    return;
+  }
+  $("#faqResult").innerHTML = `<article class="result-card">Getting answer...</article>`;
+  try {
+    const payload = await api("/api/faq", {
+      method: "POST",
+      body: JSON.stringify({ question }),
+    });
+    renderFaq(payload);
+  } catch (error) {
+    $("#faqResult").innerHTML = `<article class="result-card">${escapeHtml(error.message)}</article>`;
+  }
+}
+
+async function requestSuggestions() {
+  const message = $("#suggestionMessage").value.trim();
+  if (!message) {
+    $("#suggestionResult").innerHTML = `<article class="result-card">Enter a message for the mentor bot.</article>`;
+    return;
+  }
+  if (!state.selectedVenture) {
+    $("#suggestionResult").innerHTML = `<article class="result-card">Select a venture before asking for suggestions.</article>`;
+    return;
+  }
+  $("#suggestionResult").innerHTML = `<article class="result-card">Preparing suggestions...</article>`;
+  try {
+    const payload = await api("/api/suggestions", {
+      method: "POST",
+      body: JSON.stringify({ message, venture: state.selectedVenture }),
+    });
+    renderSuggestions(payload);
+  } catch (error) {
+    $("#suggestionResult").innerHTML = `<article class="result-card">${escapeHtml(error.message)}</article>`;
+  }
+}
+
+async function generateRoadmap() {
+  const venture = state.selectedVenture || state.ventures[0];
+  if (!venture) {
+    $("#roadmapResult").innerHTML = `<article class="result-card">Save or select a venture first.</article>`;
+    return;
+  }
+  if (!state.latestScore || state.latestScore <= 75) {
+    $("#roadmapResult").innerHTML = `<article class="result-card">Roadmap unlocks only at a score above 75.</article>`;
+    return;
+  }
+  $("#roadmapResult").innerHTML = `<article class="result-card">Generating roadmap...</article>`;
+  try {
+    const payload = await api("/api/roadmap", {
+      method: "POST",
+      body: JSON.stringify({ venture, score: state.latestScore }),
+    });
+    renderRoadmap(payload);
+  } catch (error) {
+    $("#roadmapResult").innerHTML = `<article class="result-card">${escapeHtml(error.message)}</article>`;
+  }
+}
+
+function updateRoadmapState() {
+  const button = $("#roadmapBtn");
+  const lock = $("#roadmapLock");
+  const score = Number(state.latestScore || 0);
+  if (!button || !lock) return;
+  if (score > 75 && state.selectedVenture) {
+    button.disabled = false;
+    lock.textContent = `Ready to generate a 90-day roadmap. Current score: ${score}.`;
+  } else if (score) {
+    button.disabled = true;
+    lock.textContent = `Roadmap unlocks only when validation score is above 75. Current score: ${score}.`;
+  } else {
+    button.disabled = true;
+    lock.textContent = "Run validation first. Roadmap unlocks when score is above 75.";
+  }
+}
+
+let currentPrototypeImage = null;
+
+function generatePresetImage(preset) {
+  const canvas = document.createElement("canvas");
+  canvas.width = 64;
+  canvas.height = 64;
+  const ctx = canvas.getContext("2d");
+  
+  ctx.fillStyle = "#0d1117";
+  ctx.fillRect(0, 0, 64, 64);
+  
+  if (preset === "smart_wearable") {
+    ctx.fillStyle = "#1e2433";
+    ctx.beginPath();
+    ctx.arc(32, 32, 22, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#ff3d00";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(32, 32, 16, 0.4, Math.PI * 1.8);
+    ctx.stroke();
+    ctx.fillStyle = "#2d3342";
+    ctx.fillRect(24, 0, 16, 10);
+    ctx.fillRect(24, 54, 16, 10);
+  } else if (preset === "iot_hardware_node") {
+    ctx.fillStyle = "#0c4a24";
+    ctx.fillRect(10, 10, 44, 44);
+    ctx.fillStyle = "#181a1f";
+    ctx.fillRect(22, 22, 20, 20);
+    ctx.fillStyle = "#e2d278";
+    for (let x = 14; x < 50; x += 6) {
+      ctx.fillRect(x, 11, 3, 4);
+      ctx.fillRect(x, 49, 3, 4);
+    }
+  } else if (preset === "mobile_app_interface") {
+    ctx.fillStyle = "#f8f9fa";
+    ctx.fillRect(16, 6, 32, 52);
+    ctx.fillStyle = "#212529";
+    ctx.fillRect(24, 8, 16, 3);
+    ctx.fillStyle = "#0d6efd";
+    ctx.fillRect(20, 14, 24, 14);
+    ctx.fillStyle = "#e9ecef";
+    ctx.fillRect(20, 31, 24, 12);
+    ctx.fillStyle = "#495057";
+    ctx.fillRect(18, 52, 28, 4);
+  } else if (preset === "web_saas_dashboard") {
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(6, 8, 52, 48);
+    ctx.fillStyle = "#111827";
+    ctx.fillRect(6, 8, 14, 48);
+    ctx.fillStyle = "#3b82f6";
+    ctx.fillRect(24, 28, 5, 16);
+    ctx.fillRect(32, 22, 5, 22);
+    ctx.fillRect(40, 16, 5, 28);
+    ctx.fillRect(48, 20, 5, 24);
+  } else if (preset === "health_diagnostic_device") {
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(12, 12, 40, 40);
+    ctx.fillStyle = "#0f172a";
+    ctx.fillRect(16, 16, 32, 18);
+    ctx.strokeStyle = "#10b981";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(18, 25);
+    ctx.lineTo(24, 25);
+    ctx.lineTo(28, 19);
+    ctx.lineTo(32, 30);
+    ctx.lineTo(36, 25);
+    ctx.lineTo(44, 25);
+    ctx.stroke();
+    ctx.fillStyle = "#ef4444";
+    ctx.fillRect(29, 38, 6, 10);
+    ctx.fillRect(27, 40, 10, 6);
+  } else if (preset === "robotics_automation_pod") {
+    ctx.fillStyle = "#374151";
+    ctx.fillRect(24, 24, 16, 16);
+    ctx.strokeStyle = "#9ca3af";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(10, 10); ctx.lineTo(54, 54);
+    ctx.moveTo(10, 54); ctx.lineTo(54, 10);
+    ctx.stroke();
+    ctx.fillStyle = "#ef4444";
+    ctx.beginPath(); ctx.arc(10, 10, 5, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(54, 10, 5, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#3b82f6";
+    ctx.beginPath(); ctx.arc(10, 54, 5, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(54, 54, 5, 0, Math.PI * 2); ctx.fill();
+  } else if (preset === "cleantech_energy_gadget") {
+    ctx.fillStyle = "#1e293b";
+    ctx.fillRect(10, 10, 44, 44);
+    ctx.fillStyle = "#1d4ed8";
+    for (let r = 13; r <= 35; r += 11) {
+      for (let c = 13; c <= 35; c += 11) {
+        ctx.fillRect(c, r, 9, 9);
+      }
+    }
+    ctx.fillStyle = "#22c55e";
+    ctx.fillRect(16, 48, 8, 3);
+    ctx.fillRect(26, 48, 8, 3);
+    ctx.fillRect(36, 48, 8, 3);
+  } else {
+    ctx.fillStyle = "#262626";
+    ctx.fillRect(14, 12, 36, 40);
+    ctx.fillStyle = "#737373";
+    for (let y = 18; y <= 36; y += 4) {
+      ctx.fillRect(20, y, 24, 2);
+    }
+    ctx.fillStyle = "#f97316";
+    ctx.beginPath();
+    ctx.arc(32, 44, 4, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  
+  return canvas.toDataURL("image/png");
+}
+
+function renderCnnPrediction(pred) {
+  const container = $("#cnnResult");
+  if (!pred) {
+    container.innerHTML = `<p class="text-grey">No prediction data received.</p>`;
+    return;
+  }
+  
+  const matches = pred.top_matches || [];
+  const sugg = pred.suggestions || {};
+  
+  container.innerHTML = `
+    <article class="result-card" style="border-top: 3px solid #ff3d00;">
+      <div class="proto-stat-banner">
+        <div class="proto-stat-card">
+          <span class="val" style="font-size: 1.15rem;">${escapeHtml(pred.predicted_label || pred.predicted_category || "Archetype")}</span>
+          <span class="lbl">Archetype (${escapeHtml(pred.confidence_pct || "85%")})</span>
+        </div>
+        <div class="proto-stat-card">
+          <span class="val" style="color: #22c55e;">${escapeHtml(String(pred.match_count || 0))}</span>
+          <span class="lbl">Real-World Matches</span>
+        </div>
+        <div class="proto-stat-card">
+          <span class="val" style="color: #38bdf8;">${escapeHtml(String(pred.innovation_index || 70))}/100</span>
+          <span class="lbl">Uniqueness Index</span>
+        </div>
+      </div>
+      
+      <h3 style="margin: 14px 0 10px; font-size: 0.95rem; color: #fff;">Top Matched Real-World Products &amp; Benchmarks</h3>
+      <div class="match-list">
+        ${matches.map(m => `
+          <div class="match-item">
+            <div class="match-item-head">
+              <span class="match-item-title">${escapeHtml(m.name)}</span>
+              <span class="match-score-pill">${escapeHtml(m.similarity_pct || "")} Match</span>
+            </div>
+            <div class="match-item-stage">${escapeHtml(m.stage || "")} &bull; ${escapeHtml(m.category_label || m.category)}</div>
+            <div class="match-item-desc">${escapeHtml(m.description || "")}</div>
+            ${m.mvp_takeaways ? `<div class="match-takeaway"><strong>MVP Historical Lesson:</strong> ${escapeHtml(m.mvp_takeaways)}</div>` : ""}
+            ${m.component_advice ? `<div class="match-takeaway" style="border-left-color: #38bdf8; margin-top: 5px;"><strong>BOM / Architecture Advice:</strong> ${escapeHtml(m.component_advice)}</div>` : ""}
+          </div>
+        `).join("")}
+      </div>
+
+      <h3 style="margin: 20px 0 10px; font-size: 0.95rem; color: #fff;">Actionable MVP Improvement Suggestions</h3>
+      <div class="suggestion-section">
+        ${sugg.scope_pruning?.length ? `
+          <div class="suggestion-group">
+            <h4>&#9986;&#65039; 60-90 Day MVP Scope Pruning</h4>
+            <ul>${sugg.scope_pruning.map(s => `<li>${escapeHtml(s)}</li>`).join("")}</ul>
+          </div>
+        ` : ""}
+        ${sugg.hardware_or_ux?.length ? `
+          <div class="suggestion-group">
+            <h4>&#128736;&#65039; Form Factor &amp; UX Refinements</h4>
+            <ul>${sugg.hardware_or_ux.map(s => `<li>${escapeHtml(s)}</li>`).join("")}</ul>
+          </div>
+        ` : ""}
+        ${sugg.tech_stack_advice?.length ? `
+          <div class="suggestion-group">
+            <h4>&#9889; Low-Cost BOM &amp; Tech Stack Advice</h4>
+            <ul>${sugg.tech_stack_advice.map(s => `<li>${escapeHtml(s)}</li>`).join("")}</ul>
+          </div>
+        ` : ""}
+        ${sugg.differentiation_strategy?.length ? `
+          <div class="suggestion-group">
+            <h4>&#127919; Competitive Differentiation Angle</h4>
+            <ul>${sugg.differentiation_strategy.map(s => `<li>${escapeHtml(s)}</li>`).join("")}</ul>
+          </div>
+        ` : ""}
+        ${sugg.validation_milestones?.length ? `
+          <div class="suggestion-group">
+            <h4>&#128200; 30-Day Early Adopter Validation Milestones</h4>
+            <ul>${sugg.validation_milestones.map(s => `<li>${escapeHtml(s)}</li>`).join("")}</ul>
+          </div>
+        ` : ""}
+      </div>
+    </article>
+  `;
+}
+
+async function analyzePrototypeCnn() {
+  if (!currentPrototypeImage) {
+    $("#cnnResult").innerHTML = `<article class="result-card">Please upload an image or choose one of the prototype presets first.</article>`;
+    return;
+  }
+  
+  const ventureId = $("#cnnVentureSelect")?.value ? Number($("#cnnVentureSelect").value) : null;
+  $("#cnnResult").innerHTML = `<article class="result-card" style="text-align: center; padding: 28px;"><div class="score" style="margin-bottom: 8px;">...</div><p>Running CNN prototype model inference &amp; matching real-world benchmarks...</p></article>`;
+  
+  try {
+    const payload = await api("/api/cnn-predict", {
+      method: "POST",
+      body: JSON.stringify({
+        image_base64: currentPrototypeImage,
+        venture_id: ventureId
+      })
+    });
+    
+    if (payload.error) {
+      throw new Error(payload.error);
+    }
+    
+    renderCnnPrediction(payload.prediction);
+  } catch (error) {
+    $("#cnnResult").innerHTML = `<article class="result-card"><strong style="color: #ef4444;">Analysis error</strong><p>${escapeHtml(error.message)}</p></article>`;
+  }
+}
+
+async function loadUsers() {
+  $("#userList").innerHTML = `<article class="venture-card">Loading users...</article>`;
+  try {
+    const data = await api("/api/users");
+    renderUsers(data.users);
+  } catch (error) {
+    $("#userList").innerHTML = `<article class="venture-card">${escapeHtml(error.message)}</article>`;
+  }
+}
+
+async function logout() {
+  try {
+    await api("/api/logout", { method: "POST", body: "{}" });
+  } finally {
+    state.user = null;
+    state.ventures = [];
+    state.selectedVenture = null;
+    state.latestScore = null;
+    $("#mentorSearchResults").innerHTML = "";
+    $("#ventureSearchResults").innerHTML = "";
+    applyRoleUi();
+  }
+}
+
+$$(".tab").forEach((tab) => tab.addEventListener("click", () => switchView(tab.dataset.view)));
+$$(".auth-tab").forEach((tab) => tab.addEventListener("click", () => switchAuth(tab.dataset.auth)));
+
+$("#loginForm").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const form = event.currentTarget;
+  if (!validateLoginForm(form)) {
+    $("#loginStatus").textContent = "Please fix the highlighted fields.";
+    return;
+  }
+  const payload = Object.fromEntries(new FormData(form).entries());
+  $("#loginStatus").textContent = "Logging in...";
+  try {
+    await login(payload.email, payload.password);
+  } catch (error) {
+    console.error("Login failed", error);
+    $("#loginStatus").textContent = error.message;
+  }
+});
+
+$("#registerForm").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const form = event.currentTarget;
+  if (!validateRegisterForm(form)) {
+    $("#registerStatus").textContent = "Please fix the highlighted fields.";
+    return;
+  }
+  const payload = Object.fromEntries(new FormData(form).entries());
+  $("#registerStatus").textContent = "Creating account...";
+  try {
+    await api("/api/register", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+    $("#registerStatus").textContent = "Account created. You can login now.";
+    form.reset();
+    switchAuth("login");
+    $("#loginForm").email.value = payload.email;
+  } catch (error) {
+    $("#registerStatus").textContent = error.message;
+  }
+});
+
+const registerNameInput = $("#registerForm input[name='name']");
+const registerEmailInput = $("#registerForm input[name='email']");
+const registerPasswordInput = $("#registerForm input[name='password']");
+const loginEmailInput = $("#loginForm input[name='email']");
+const loginPasswordInput = $("#loginForm input[name='password']");
+
+if (registerNameInput) {
+  registerNameInput.addEventListener("blur", (event) => {
+    const value = event.target.value;
+    if (value && !isNameValid(value)) {
+      setFieldFeedback("registerNameFeedback", "Name must start with a letter and not begin with a number.", "error");
+    } else {
+      clearFieldFeedback("registerNameFeedback");
+    }
+  });
+}
+
+if (registerEmailInput) {
+  registerEmailInput.addEventListener("blur", (event) => {
+    const value = event.target.value;
+    if (value && !isEmailValid(value)) {
+      setFieldFeedback("registerEmailFeedback", "Enter a valid email address.", "error");
+    } else {
+      clearFieldFeedback("registerEmailFeedback");
+    }
+  });
+}
+
+if (registerPasswordInput) {
+  registerPasswordInput.addEventListener("input", (event) => {
+    updatePasswordFeedback(event.target.value);
+  });
+}
+
+if (loginEmailInput) {
+  loginEmailInput.addEventListener("blur", (event) => {
+    const value = event.target.value;
+    if (value && !isEmailValid(value)) {
+      setFieldFeedback("loginEmailFeedback", "Enter a valid email address.", "error");
+    } else {
+      clearFieldFeedback("loginEmailFeedback");
+    }
+  });
+}
+
+if (loginPasswordInput) {
+  loginPasswordInput.addEventListener("blur", (event) => {
+    const value = event.target.value;
+    if (value && value.length < 6) {
+      setFieldFeedback("loginPasswordFeedback", "Password must be at least 6 characters.", "error");
+    } else {
+      clearFieldFeedback("loginPasswordFeedback");
+    }
+  });
+}
+
+$("#ventureForm").addEventListener("submit", saveVenture);
+$("#refreshBtn").addEventListener("click", loadVentures);
+$("#mentorSearchBtn").addEventListener("click", searchMentors);
+$("#ventureSearchBtn").addEventListener("click", searchVentures);
+$("#mentorSearchInput").addEventListener("keydown", (event) => {
+  if (event.key === "Enter") searchMentors();
+});
+$("#ventureSearchInput").addEventListener("keydown", (event) => {
+  if (event.key === "Enter") searchVentures();
+});
+$("#validateBtn").addEventListener("click", validateSelected);
+$("#nlpBtn").addEventListener("click", analyzeNlp);
+$("#cnnImageInput")?.addEventListener("change", handleCnnImageChange);
+$("#cnnPredictBtn")?.addEventListener("click", predictCnn);
+$("#faqBtn").addEventListener("click", askFaq);
+$("#suggestionBtn").addEventListener("click", requestSuggestions);
+$("#roadmapBtn").addEventListener("click", generateRoadmap);
+$("#loadUsersBtn").addEventListener("click", loadUsers);
+$("#logoutBtn").addEventListener("click", logout);
+$("#ventureSelect").addEventListener("change", (event) => {
+  state.selectedVenture = state.ventures.find((venture) => venture.id === Number(event.target.value));
+  updateRoadmapState();
+});
+
+const protoInput = $("#prototypeImageInput");
+if (protoInput) {
+  protoInput.addEventListener("change", (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      currentPrototypeImage = e.target.result;
+      const preview = $("#imagePreview");
+      const img = $("#previewImg");
+      if (preview && img) {
+        img.src = currentPrototypeImage;
+        preview.style.display = "block";
+      }
+      $$(".chip-btn").forEach(btn => btn.classList.remove("active"));
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+$$(".chip-btn").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    $$(".chip-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    const preset = btn.getAttribute("data-preset");
+    currentPrototypeImage = generatePresetImage(preset);
+    const preview = $("#imagePreview");
+    const img = $("#previewImg");
+    if (preview && img) {
+      img.src = currentPrototypeImage;
+      preview.style.display = "block";
+    }
+  });
+});
+
+const cnnPredictBtn = $("#cnnPredictBtn");
+if (cnnPredictBtn) {
+  cnnPredictBtn.addEventListener("click", analyzePrototypeCnn);
+}
+
+loadSession();
+loadAiStatus();
+updateRoadmapState();
