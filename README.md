@@ -43,32 +43,46 @@ npm start
 
 If you prefer a different variable name, the server also accepts `ADVANCED_AI_API_KEY` as an alias for `OPENAI_API_KEY`.
 
-## TensorFlow CNN training
+## TensorFlow CNN Prototype Matching & MVP Suggestions
 
-A separate training script has been added to the repository for a minimal TensorFlow CNN workflow.
+The platform includes a retrained Convolutional Neural Network (CNN) specifically tailored for entrepreneurial innovation:
+- Extracts deep 128-dimensional feature embeddings from prototype images (sketches, CAD renders, hardware photos, UI mockups).
+- Matches the input against a comprehensive benchmark database of real-world commercial products and prototypes.
+- Calculates the count of real-world market matches (`match_count`).
+- Delivers tailored, structured MVP improvement suggestions:
+  - ✂️ 60-90 Day MVP Scope Pruning
+  - 🛠️ Industrial Design & UX Form-Factor Refinements
+  - ⚡ Low-Cost BOM & Tech Stack Guidance
+  - 🎯 Competitive Differentiation Strategy
+  - 📈 30-Day Early Adopter Validation Milestones
 
-Install TensorFlow in your Python environment:
-
+### Retrain Prototype Model
 ```powershell
-python -m pip install tensorflow
+python train_cnn_prototype.py --epochs 8
+```
+or via the unified CLI:
+```powershell
+python train_cnn.py --mode prototype --epochs 8
 ```
 
-Then run the training script:
-
-```powershell
-python train_cnn.py --epochs 10 --batch-size 64 --output-dir models --model-name cnn_cifar10.keras
-```
-
-The script downloads CIFAR-10, trains a small convolutional model, evaluates it on test data, and saves the model to `models/cnn_cifar10.keras`.
-
-### CNN inference from the Node app
-
-A new API route is available to run inference using the saved TensorFlow model:
-
+### CNN Inference Route
 - `POST /api/cnn-predict`
-- JSON body: `{ "image_base64": "..." }`
+- Body: `{ "image_base64": "...", "venture_id": 123 }`
+- Returns: `{ "prediction": { "predicted_category", "confidence", "match_count", "innovation_index", "top_matches", "suggestions" } }`
 
-The route returns CIFAR-10 class probabilities and the predicted label.
+## Automated Test Suites
+
+The project provides comprehensive multi-layered automated testing:
+
+```powershell
+# Run all tests (White-Box, Black-Box, Integrated)
+npm test
+
+# Run individual test suites
+npm run test:whitebox
+npm run test:blackbox
+npm run test:integrated
+```
 
 ## Optional Supabase replication
 

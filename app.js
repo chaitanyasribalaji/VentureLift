@@ -275,13 +275,17 @@ function emptyPortfolioText() {
 
 function renderVentureSelect() {
   const select = $("#ventureSelect");
+  const cnnSelect = $("#cnnVentureSelect");
   if (!state.ventures.length) {
-    select.innerHTML = `<option>No ventures available</option>`;
+    if (select) select.innerHTML = `<option>No ventures available</option>`;
+    if (cnnSelect) cnnSelect.innerHTML = `<option value="">No venture selected</option>`;
     state.selectedVenture = null;
     updateRoadmapState();
     return;
   }
-  select.innerHTML = state.ventures.map((venture) => `<option value="${venture.id}">${escapeHtml(venture.name)}</option>`).join("");
+  const optionsHtml = state.ventures.map((venture) => `<option value="${venture.id}">${escapeHtml(venture.name)}</option>`).join("");
+  if (select) select.innerHTML = optionsHtml;
+  if (cnnSelect) cnnSelect.innerHTML = `<option value="">General Prototype (No venture linked)</option>` + optionsHtml;
   state.selectedVenture = state.ventures[0];
   updateRoadmapState();
 }
@@ -636,6 +640,231 @@ function updateRoadmapState() {
   }
 }
 
+let currentPrototypeImage = null;
+
+function generatePresetImage(preset) {
+  const canvas = document.createElement("canvas");
+  canvas.width = 64;
+  canvas.height = 64;
+  const ctx = canvas.getContext("2d");
+  
+  ctx.fillStyle = "#0d1117";
+  ctx.fillRect(0, 0, 64, 64);
+  
+  if (preset === "smart_wearable") {
+    ctx.fillStyle = "#1e2433";
+    ctx.beginPath();
+    ctx.arc(32, 32, 22, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#ff3d00";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(32, 32, 16, 0.4, Math.PI * 1.8);
+    ctx.stroke();
+    ctx.fillStyle = "#2d3342";
+    ctx.fillRect(24, 0, 16, 10);
+    ctx.fillRect(24, 54, 16, 10);
+  } else if (preset === "iot_hardware_node") {
+    ctx.fillStyle = "#0c4a24";
+    ctx.fillRect(10, 10, 44, 44);
+    ctx.fillStyle = "#181a1f";
+    ctx.fillRect(22, 22, 20, 20);
+    ctx.fillStyle = "#e2d278";
+    for (let x = 14; x < 50; x += 6) {
+      ctx.fillRect(x, 11, 3, 4);
+      ctx.fillRect(x, 49, 3, 4);
+    }
+  } else if (preset === "mobile_app_interface") {
+    ctx.fillStyle = "#f8f9fa";
+    ctx.fillRect(16, 6, 32, 52);
+    ctx.fillStyle = "#212529";
+    ctx.fillRect(24, 8, 16, 3);
+    ctx.fillStyle = "#0d6efd";
+    ctx.fillRect(20, 14, 24, 14);
+    ctx.fillStyle = "#e9ecef";
+    ctx.fillRect(20, 31, 24, 12);
+    ctx.fillStyle = "#495057";
+    ctx.fillRect(18, 52, 28, 4);
+  } else if (preset === "web_saas_dashboard") {
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(6, 8, 52, 48);
+    ctx.fillStyle = "#111827";
+    ctx.fillRect(6, 8, 14, 48);
+    ctx.fillStyle = "#3b82f6";
+    ctx.fillRect(24, 28, 5, 16);
+    ctx.fillRect(32, 22, 5, 22);
+    ctx.fillRect(40, 16, 5, 28);
+    ctx.fillRect(48, 20, 5, 24);
+  } else if (preset === "health_diagnostic_device") {
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(12, 12, 40, 40);
+    ctx.fillStyle = "#0f172a";
+    ctx.fillRect(16, 16, 32, 18);
+    ctx.strokeStyle = "#10b981";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(18, 25);
+    ctx.lineTo(24, 25);
+    ctx.lineTo(28, 19);
+    ctx.lineTo(32, 30);
+    ctx.lineTo(36, 25);
+    ctx.lineTo(44, 25);
+    ctx.stroke();
+    ctx.fillStyle = "#ef4444";
+    ctx.fillRect(29, 38, 6, 10);
+    ctx.fillRect(27, 40, 10, 6);
+  } else if (preset === "robotics_automation_pod") {
+    ctx.fillStyle = "#374151";
+    ctx.fillRect(24, 24, 16, 16);
+    ctx.strokeStyle = "#9ca3af";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(10, 10); ctx.lineTo(54, 54);
+    ctx.moveTo(10, 54); ctx.lineTo(54, 10);
+    ctx.stroke();
+    ctx.fillStyle = "#ef4444";
+    ctx.beginPath(); ctx.arc(10, 10, 5, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(54, 10, 5, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#3b82f6";
+    ctx.beginPath(); ctx.arc(10, 54, 5, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(54, 54, 5, 0, Math.PI * 2); ctx.fill();
+  } else if (preset === "cleantech_energy_gadget") {
+    ctx.fillStyle = "#1e293b";
+    ctx.fillRect(10, 10, 44, 44);
+    ctx.fillStyle = "#1d4ed8";
+    for (let r = 13; r <= 35; r += 11) {
+      for (let c = 13; c <= 35; c += 11) {
+        ctx.fillRect(c, r, 9, 9);
+      }
+    }
+    ctx.fillStyle = "#22c55e";
+    ctx.fillRect(16, 48, 8, 3);
+    ctx.fillRect(26, 48, 8, 3);
+    ctx.fillRect(36, 48, 8, 3);
+  } else {
+    ctx.fillStyle = "#262626";
+    ctx.fillRect(14, 12, 36, 40);
+    ctx.fillStyle = "#737373";
+    for (let y = 18; y <= 36; y += 4) {
+      ctx.fillRect(20, y, 24, 2);
+    }
+    ctx.fillStyle = "#f97316";
+    ctx.beginPath();
+    ctx.arc(32, 44, 4, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  
+  return canvas.toDataURL("image/png");
+}
+
+function renderCnnPrediction(pred) {
+  const container = $("#cnnResult");
+  if (!pred) {
+    container.innerHTML = `<p class="text-grey">No prediction data received.</p>`;
+    return;
+  }
+  
+  const matches = pred.top_matches || [];
+  const sugg = pred.suggestions || {};
+  
+  container.innerHTML = `
+    <article class="result-card" style="border-top: 3px solid #ff3d00;">
+      <div class="proto-stat-banner">
+        <div class="proto-stat-card">
+          <span class="val" style="font-size: 1.15rem;">${escapeHtml(pred.predicted_label || pred.predicted_category || "Archetype")}</span>
+          <span class="lbl">Archetype (${escapeHtml(pred.confidence_pct || "85%")})</span>
+        </div>
+        <div class="proto-stat-card">
+          <span class="val" style="color: #22c55e;">${escapeHtml(String(pred.match_count || 0))}</span>
+          <span class="lbl">Real-World Matches</span>
+        </div>
+        <div class="proto-stat-card">
+          <span class="val" style="color: #38bdf8;">${escapeHtml(String(pred.innovation_index || 70))}/100</span>
+          <span class="lbl">Uniqueness Index</span>
+        </div>
+      </div>
+      
+      <h3 style="margin: 14px 0 10px; font-size: 0.95rem; color: #fff;">Top Matched Real-World Products &amp; Benchmarks</h3>
+      <div class="match-list">
+        ${matches.map(m => `
+          <div class="match-item">
+            <div class="match-item-head">
+              <span class="match-item-title">${escapeHtml(m.name)}</span>
+              <span class="match-score-pill">${escapeHtml(m.similarity_pct || "")} Match</span>
+            </div>
+            <div class="match-item-stage">${escapeHtml(m.stage || "")} &bull; ${escapeHtml(m.category_label || m.category)}</div>
+            <div class="match-item-desc">${escapeHtml(m.description || "")}</div>
+            ${m.mvp_takeaways ? `<div class="match-takeaway"><strong>MVP Historical Lesson:</strong> ${escapeHtml(m.mvp_takeaways)}</div>` : ""}
+            ${m.component_advice ? `<div class="match-takeaway" style="border-left-color: #38bdf8; margin-top: 5px;"><strong>BOM / Architecture Advice:</strong> ${escapeHtml(m.component_advice)}</div>` : ""}
+          </div>
+        `).join("")}
+      </div>
+
+      <h3 style="margin: 20px 0 10px; font-size: 0.95rem; color: #fff;">Actionable MVP Improvement Suggestions</h3>
+      <div class="suggestion-section">
+        ${sugg.scope_pruning?.length ? `
+          <div class="suggestion-group">
+            <h4>&#9986;&#65039; 60-90 Day MVP Scope Pruning</h4>
+            <ul>${sugg.scope_pruning.map(s => `<li>${escapeHtml(s)}</li>`).join("")}</ul>
+          </div>
+        ` : ""}
+        ${sugg.hardware_or_ux?.length ? `
+          <div class="suggestion-group">
+            <h4>&#128736;&#65039; Form Factor &amp; UX Refinements</h4>
+            <ul>${sugg.hardware_or_ux.map(s => `<li>${escapeHtml(s)}</li>`).join("")}</ul>
+          </div>
+        ` : ""}
+        ${sugg.tech_stack_advice?.length ? `
+          <div class="suggestion-group">
+            <h4>&#9889; Low-Cost BOM &amp; Tech Stack Advice</h4>
+            <ul>${sugg.tech_stack_advice.map(s => `<li>${escapeHtml(s)}</li>`).join("")}</ul>
+          </div>
+        ` : ""}
+        ${sugg.differentiation_strategy?.length ? `
+          <div class="suggestion-group">
+            <h4>&#127919; Competitive Differentiation Angle</h4>
+            <ul>${sugg.differentiation_strategy.map(s => `<li>${escapeHtml(s)}</li>`).join("")}</ul>
+          </div>
+        ` : ""}
+        ${sugg.validation_milestones?.length ? `
+          <div class="suggestion-group">
+            <h4>&#128200; 30-Day Early Adopter Validation Milestones</h4>
+            <ul>${sugg.validation_milestones.map(s => `<li>${escapeHtml(s)}</li>`).join("")}</ul>
+          </div>
+        ` : ""}
+      </div>
+    </article>
+  `;
+}
+
+async function analyzePrototypeCnn() {
+  if (!currentPrototypeImage) {
+    $("#cnnResult").innerHTML = `<article class="result-card">Please upload an image or choose one of the prototype presets first.</article>`;
+    return;
+  }
+  
+  const ventureId = $("#cnnVentureSelect")?.value ? Number($("#cnnVentureSelect").value) : null;
+  $("#cnnResult").innerHTML = `<article class="result-card" style="text-align: center; padding: 28px;"><div class="score" style="margin-bottom: 8px;">...</div><p>Running CNN prototype model inference &amp; matching real-world benchmarks...</p></article>`;
+  
+  try {
+    const payload = await api("/api/cnn-predict", {
+      method: "POST",
+      body: JSON.stringify({
+        image_base64: currentPrototypeImage,
+        venture_id: ventureId
+      })
+    });
+    
+    if (payload.error) {
+      throw new Error(payload.error);
+    }
+    
+    renderCnnPrediction(payload.prediction);
+  } catch (error) {
+    $("#cnnResult").innerHTML = `<article class="result-card"><strong style="color: #ef4444;">Analysis error</strong><p>${escapeHtml(error.message)}</p></article>`;
+  }
+}
+
 async function loadUsers() {
   $("#userList").innerHTML = `<article class="venture-card">Loading users...</article>`;
   try {
@@ -780,6 +1009,46 @@ $("#ventureSelect").addEventListener("change", (event) => {
   state.selectedVenture = state.ventures.find((venture) => venture.id === Number(event.target.value));
   updateRoadmapState();
 });
+
+const protoInput = $("#prototypeImageInput");
+if (protoInput) {
+  protoInput.addEventListener("change", (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      currentPrototypeImage = e.target.result;
+      const preview = $("#imagePreview");
+      const img = $("#previewImg");
+      if (preview && img) {
+        img.src = currentPrototypeImage;
+        preview.style.display = "block";
+      }
+      $$(".chip-btn").forEach(btn => btn.classList.remove("active"));
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+$$(".chip-btn").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    $$(".chip-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    const preset = btn.getAttribute("data-preset");
+    currentPrototypeImage = generatePresetImage(preset);
+    const preview = $("#imagePreview");
+    const img = $("#previewImg");
+    if (preview && img) {
+      img.src = currentPrototypeImage;
+      preview.style.display = "block";
+    }
+  });
+});
+
+const cnnPredictBtn = $("#cnnPredictBtn");
+if (cnnPredictBtn) {
+  cnnPredictBtn.addEventListener("click", analyzePrototypeCnn);
+}
 
 loadSession();
 loadAiStatus();

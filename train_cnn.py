@@ -1,16 +1,22 @@
-"""Train a simple TensorFlow CNN on CIFAR-10.
+"""Train or retrain TensorFlow CNN models for VentureLift.
 
-This script is intentionally separate from the Node app. It adds a minimal
-computer vision training workflow to the repo and saves a Keras model to disk.
+Supports:
+1) --mode prototype (default): Trains the Entrepreneurial Prototype Matcher CNN with real-world products catalog.
+2) --mode cifar10: Trains the original minimal CIFAR-10 model.
 """
 
 import argparse
+import os
 from pathlib import Path
+
+# Suppress TF verbose logging
+os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
 import tensorflow as tf
 
 
-def build_model(input_shape=(32, 32, 3), num_classes=10):
+def build_cifar_model(input_shape=(32, 32, 3), num_classes=10):
     return tf.keras.Sequential(
         [
             tf.keras.layers.Conv2D(32, (3, 3), activation="relu", input_shape=input_shape),
@@ -34,11 +40,12 @@ def load_cifar10():
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Train a TensorFlow CNN on CIFAR-10.")
-    parser.add_argument("--epochs", type=int, default=10, help="Number of training epochs")
-    parser.add_argument("--batch-size", type=int, default=64, help="Training batch size")
+    parser = argparse.ArgumentParser(description="Train CNN model for VentureLift.")
+    parser.add_argument("--mode", type=str, choices=["prototype", "cifar10"], default="prototype", help="Training mode")
+    parser.add_argument("--epochs", type=int, default=8, help="Number of training epochs")
+    parser.add_argument("--batch-size", type=int, default=32, help="Training batch size")
     parser.add_argument("--output-dir", type=Path, default=Path("models"), help="Directory to save the model")
-    parser.add_argument("--model-name", type=str, default="cnn_cifar10.keras", help="Model filename to save")
+    parser.add_argument("--model-name", type=str, default="cnn_prototype.keras", help="Model filename to save")
     return parser.parse_args()
 
 
@@ -46,12 +53,18 @@ def main():
     args = parse_args()
     args.output_dir.mkdir(parents=True, exist_ok=True)
 
+    if args.mode == "prototype":
+        from train_cnn_prototype import main as train_prototype
+        print("Launching Prototype Matcher & Real-World Product CNN training...")
+        train_prototype()
+        return
+
     print("Loading CIFAR-10 dataset...")
     x_train, y_train, x_test, y_test = load_cifar10()
 
     print(f"Training samples: {x_train.shape[0]}, test samples: {x_test.shape[0]}")
     print("Building model...")
-    model = build_model(input_shape=x_train.shape[1:], num_classes=10)
+    model = build_cifar_model(input_shape=x_train.shape[1:], num_classes=10)
 
     model.compile(
         optimizer="adam",

@@ -5,7 +5,11 @@
   "type": "module",
   "main": "server.mjs",
   "scripts": {
-    "start": "node server.mjs"
+    "start": "node server.mjs",
+    "test": "node tests/run_all_tests.mjs",
+    "test:whitebox": "node tests/whitebox.test.mjs",
+    "test:blackbox": "node tests/blackbox.test.mjs",
+    "test:integrated": "node tests/integrated.test.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.0.0"

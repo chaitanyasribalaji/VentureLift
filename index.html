@@ -282,6 +282,50 @@
               <div id="roadmapResult" class="result"></div>
             </section>
           </div>
+
+          <!-- CNN Prototype Matcher & MVP Advisor -->
+          <section class="panel prototype-panel" style="margin-top: 24px;">
+            <div class="panel-head">
+              <div>
+                <h2>CNN Prototype Matcher &amp; MVP Advisor</h2>
+                <p class="panel-note">Upload or select a prototype image (sketch, CAD, hardware photo, UI mockup). The retrained CNN matches it with real-world products, counts market comparables, and delivers tailored suggestions to build an MVP.</p>
+              </div>
+            </div>
+            <div class="split">
+              <div>
+                <label>Venture context (optional)
+                  <select id="cnnVentureSelect"></select>
+                </label>
+                <label>Upload prototype image
+                  <input type="file" id="prototypeImageInput" accept="image/*" class="file-input">
+                </label>
+                <div class="quick-samples">
+                  <small style="display:block; margin: 10px 0 6px; color: #aaa; font-weight: 600;">Or test with prototype presets:</small>
+                  <div class="sample-buttons" style="display: flex; gap: 6px; flex-wrap: wrap;">
+                    <button type="button" class="chip-btn" data-preset="smart_wearable">&#9201; Smart Wearable</button>
+                    <button type="button" class="chip-btn" data-preset="iot_hardware_node">&#9889; IoT Node</button>
+                    <button type="button" class="chip-btn" data-preset="mobile_app_interface">&#128241; Mobile App</button>
+                    <button type="button" class="chip-btn" data-preset="web_saas_dashboard">&#128187; Web SaaS</button>
+                    <button type="button" class="chip-btn" data-preset="health_diagnostic_device">&#129658; HealthTech</button>
+                    <button type="button" class="chip-btn" data-preset="robotics_automation_pod">&#129302; Robotics</button>
+                    <button type="button" class="chip-btn" data-preset="cleantech_energy_gadget">&#127793; CleanTech</button>
+                    <button type="button" class="chip-btn" data-preset="consumer_electronics_tool">&#128266; Smart Gadget</button>
+                  </div>
+                </div>
+                <div class="image-preview-container" style="margin-top: 14px;">
+                  <div id="imagePreview" style="display: none; border-radius: 8px; overflow: hidden; max-height: 200px; text-align: center; background: #16181f; padding: 10px; border: 1px dashed #333;">
+                    <img id="previewImg" src="" alt="Prototype preview" style="max-height: 180px; max-width: 100%; object-fit: contain; border-radius: 6px;">
+                  </div>
+                </div>
+                <button id="cnnPredictBtn" class="primary" style="margin-top: 16px;">Analyze Prototype with CNN</button>
+              </div>
+              <div>
+                <div id="cnnResult" class="result">
+                  <p class="text-grey" style="padding: 24px; text-align: center;">Upload a prototype image or choose a preset and click "Analyze Prototype with CNN" to identify real-world product matches, count comparables, and get targeted MVP improvement suggestions.</p>
+                </div>
+              </div>
+            </div>
+          </section>
         </section>
 
         <section id="mentor" class="view">
