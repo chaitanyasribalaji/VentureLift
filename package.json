@@ -9,7 +9,9 @@
     "test": "node tests/run_all_tests.mjs",
     "test:whitebox": "node tests/whitebox.test.mjs",
     "test:blackbox": "node tests/blackbox.test.mjs",
-    "test:integrated": "node tests/integrated.test.mjs"
+    "test:integrated": "node tests/integrated.test.mjs",
+    "test:backend": "node --test tests/test_backend.mjs",
+    "test:python": "python -m pytest tests/ -v"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.0.0"

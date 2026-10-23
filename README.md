@@ -11,6 +11,21 @@ A dependency-free full-stack prototype for an entrepreneurial support and innova
 - NLP-style pitch and market signal analyzer
 - Local fallback analysis when no API key is configured
 
+## Tests
+
+```powershell
+npm install
+npm test
+python -m pip install -r requirements.txt
+npm run test:python
+```
+
+Or run everything:
+
+```powershell
+npm run test:all
+```
+
 ## Run
 
 Install dependencies first:
@@ -70,6 +85,8 @@ python train_cnn.py --mode prototype --epochs 8
 - Body: `{ "image_base64": "...", "venture_id": 123 }`
 - Returns: `{ "prediction": { "predicted_category", "confidence", "match_count", "innovation_index", "top_matches", "suggestions" } }`
 
+You can also upload a prototype image or choose from 8 instant prototype presets directly from the **AI Validation** tab in the web UI.
+
 ## Automated Test Suites
 
 The project provides comprehensive multi-layered automated testing:
@@ -94,7 +111,9 @@ $env:SUPABASE_KEY="your-supabase-key"
 npm start
 ```
 
-The server will continue to use the local SQLite database for primary storage while optionally sending copies of new users, ventures, and AI reports to your Supabase project.
+Run `supabase-setup.sql` in your Supabase SQL Editor first so tables match the app schema.
+
+The server will continue to use the local SQLite database for primary storage while optionally sending copies of new users, ventures, and AI reports to your Supabase project. Use the **service role** key for `SUPABASE_KEY` so the Node server can read and write all tables.
 
 ## Deploy to Vercel
 

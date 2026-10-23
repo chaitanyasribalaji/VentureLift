@@ -308,6 +308,34 @@ function renderValidation(payload, source) {
   `;
 }
 
+function renderCnn(payload) {
+  const prediction = payload.prediction;
+  if (!prediction) {
+    $("#cnnResult").innerHTML = `<article class="result-card">${escapeHtml(payload.error || "No prediction returned.")}</article>`;
+    return;
+  }
+  const topLabels = (prediction.labels || [])
+    .map((label, index) => ({
+      label,
+      probability: prediction.probabilities?.[index] ?? 0,
+    }))
+    .sort((a, b) => b.probability - a.probability)
+    .slice(0, 5);
+
+  $("#cnnResult").innerHTML = `
+    <article class="result-card">
+      <strong>Predicted class</strong>
+      <p><b>${escapeHtml(prediction.predicted_label)}</b> (${Math.round((prediction.probabilities?.[prediction.predicted_index] ?? 0) * 100)}%)</p>
+    </article>
+    <article class="result-card">
+      <strong>Top probabilities</strong>
+      <ul>${topLabels
+        .map((item) => `<li>${escapeHtml(item.label)}: ${(item.probability * 100).toFixed(1)}%</li>`)
+        .join("")}</ul>
+    </article>
+  `;
+}
+
 function renderNlp(payload, source) {
   const result = payload.result;
   $("#nlpResult").innerHTML = `
@@ -545,6 +573,52 @@ async function validateSelected() {
     body: JSON.stringify({ venture }),
   });
   renderValidation(payload, payload.source);
+}
+
+async function predictCnn() {
+  const fileInput = $("#cnnImageInput");
+  const file = fileInput?.files?.[0];
+  if (!file) {
+    $("#cnnResult").innerHTML = `<article class="result-card">Choose an image first.</article>`;
+    return;
+  }
+
+  $("#cnnResult").innerHTML = `<article class="result-card">Running CNN prediction...</article>`;
+  try {
+    const imageBase64 = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = String(reader.result || "");
+        const commaIndex = result.indexOf(",");
+        resolve(commaIndex === -1 ? result : result.slice(commaIndex + 1));
+      };
+      reader.onerror = () => reject(new Error("Unable to read image file."));
+      reader.readAsDataURL(file);
+    });
+
+    const payload = await api("/api/cnn-predict", {
+      method: "POST",
+      body: JSON.stringify({ image_base64: imageBase64 }),
+    });
+    renderCnn(payload);
+  } catch (error) {
+    $("#cnnResult").innerHTML = `<article class="result-card">${escapeHtml(error.message)}</article>`;
+  }
+}
+
+function handleCnnImageChange(event) {
+  const file = event.target.files?.[0];
+  const preview = $("#cnnPreview");
+  const button = $("#cnnPredictBtn");
+  if (!file) {
+    preview.classList.add("hidden");
+    preview.removeAttribute("src");
+    if (button) button.disabled = true;
+    return;
+  }
+  preview.src = URL.createObjectURL(file);
+  preview.classList.remove("hidden");
+  if (button) button.disabled = false;
 }
 
 async function analyzeNlp() {
@@ -1000,6 +1074,8 @@ $("#ventureSearchInput").addEventListener("keydown", (event) => {
 });
 $("#validateBtn").addEventListener("click", validateSelected);
 $("#nlpBtn").addEventListener("click", analyzeNlp);
+$("#cnnImageInput")?.addEventListener("change", handleCnnImageChange);
+$("#cnnPredictBtn")?.addEventListener("click", predictCnn);
 $("#faqBtn").addEventListener("click", askFaq);
 $("#suggestionBtn").addEventListener("click", requestSuggestions);
 $("#roadmapBtn").addEventListener("click", generateRoadmap);

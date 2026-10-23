@@ -260,6 +260,19 @@
               <div id="nlpResult" class="result"></div>
             </section>
           </div>
+          <section class="panel cnn-panel">
+            <h2>CNN image classifier</h2>
+            <p class="panel-note">Upload an image to classify it with the trained CIFAR-10 model (requires <code>models/cnn_cifar10.keras</code>).</p>
+            <div class="cnn-upload-row">
+              <label class="cnn-file-label">
+                Choose image
+                <input id="cnnImageInput" type="file" accept="image/*">
+              </label>
+              <img id="cnnPreview" class="cnn-preview hidden" alt="Selected image preview">
+              <button id="cnnPredictBtn" class="secondary" type="button" disabled>Run CNN prediction</button>
+            </div>
+            <div id="cnnResult" class="result"></div>
+          </section>
           <div class="assistant-grid">
             <section class="panel assistant-panel">
               <h2>FAQ bot</h2>
