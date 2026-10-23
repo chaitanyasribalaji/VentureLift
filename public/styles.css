@@ -26,9 +26,12 @@ body {
   font-weight: 400;
   color: #edf2f7;
   background:
-    radial-gradient(circle at top left, rgba(255, 61, 0, 0.14), transparent 18%),
-    radial-gradient(circle at 80% 10%, rgba(96, 165, 250, 0.08), transparent 20%),
-    linear-gradient(180deg, #040404 0%, #0d1014 100%);
+    radial-gradient(circle at 20% 20%, rgba(255, 61, 0, 0.22), transparent 34%),
+    radial-gradient(circle at 80% 15%, rgba(56, 189, 248, 0.15), transparent 30%),
+    linear-gradient(180deg, rgba(4, 4, 6, 0.85) 0%, rgba(8, 10, 16, 0.92) 100%),
+    url("https://images.unsplash.com/photo-1559136555-9303baea8ebd?auto=format&fit=crop&w=1920&q=80") no-repeat center center fixed;
+  background-size: cover;
+  background-attachment: fixed;
   overscroll-behavior-y: contain;
 }
 
@@ -322,13 +325,15 @@ body {
 }
 
 .auth-panel {
-  background: rgba(8, 8, 12, 0.96);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 16px;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.09) 0%, rgba(255, 255, 255, 0.02) 100%), rgba(10, 12, 18, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-top: 1px solid rgba(255, 255, 255, 0.38);
+  border-radius: 18px;
   padding: 24px 24px 12px;
   position: relative;
-  backdrop-filter: blur(24px);
-  box-shadow: 0 36px 90px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(24px) saturate(170%);
+  -webkit-backdrop-filter: blur(24px) saturate(170%);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.25), 0 36px 90px rgba(0, 0, 0, 0.45);
   max-height: calc(100vh - 120px);
   overflow-y: auto;
   color: #e2e8f0;
@@ -341,7 +346,7 @@ body {
   background: linear-gradient(90deg, #ff3d00, #ff8a5c);
   position: absolute;
   inset: 0 0 auto;
-  border-radius: 16px 16px 0 0;
+  border-radius: 18px 18px 0 0;
 }
 
 .auth-card-head {
@@ -375,14 +380,18 @@ body {
   margin-bottom: 22px;
   padding: 4px;
   background: rgba(255, 255, 255, 0.06);
-  border: 1px solid var(--surface-border);
-  border-radius: 8px;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-top: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 10px;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.15);
 }
 
 .auth-tab {
   background: transparent;
-  border: 0;
-  border-radius: 6px;
+  border: 1px solid transparent;
+  border-radius: 7px;
   color: var(--text-muted);
   cursor: pointer;
   font: inherit;
@@ -396,9 +405,11 @@ body {
 }
 
 .auth-tab.active {
-  background: #ff3d00;
+  background: linear-gradient(135deg, #ff4b16, #ff8544);
   color: #fff;
-  box-shadow: 0 8px 24px rgba(255, 61, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-top: 1px solid rgba(255, 255, 255, 0.55);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 8px 24px rgba(255, 61, 0, 0.35);
 }
 
 .auth-form {
@@ -435,16 +446,20 @@ body {
 .panel textarea,
 .search-row input {
   width: 100%;
-  border: 1px solid var(--surface-border);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-top: 1px solid rgba(255, 255, 255, 0.28);
   border-radius: 10px;
   color: #fff;
   font: inherit;
   font-size: 14px;
-  padding: 12px;
+  padding: 12px 14px;
   outline: none;
-  background: rgba(22, 22, 28, 0.92);
+  background: rgba(16, 20, 30, 0.65);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   margin-top: 6px;
-  transition: border-color 200ms ease, box-shadow 200ms ease;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transition: border-color 200ms ease, box-shadow 200ms ease, background 200ms ease;
 }
 
 .auth-form input:focus,
@@ -456,13 +471,15 @@ body {
 .panel textarea:focus,
 .search-row input:focus {
   border-color: #ff7a3c;
-  box-shadow: 0 0 0 3px rgba(255, 61, 0, 0.16);
+  border-top-color: #ff9b66;
+  background: rgba(22, 28, 42, 0.82);
+  box-shadow: 0 0 0 3px rgba(255, 61, 0, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 .auth-form select option,
 .builder select option,
 .panel select option {
-  background: #1a1a1f;
+  background: #12151f;
   color: #fff;
 }
 
@@ -485,21 +502,24 @@ body {
   min-height: 44px;
   min-width: 120px;
   padding: 12px 24px;
-  border: 0;
-  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-top: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: 8px;
   cursor: pointer;
   font: inherit;
   font-weight: 700;
   font-size: 14px;
   letter-spacing: 0.7px;
   color: #fff;
-  background: linear-gradient(135deg, #ff4b16, #ff9c5e);
-  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.18);
+  background: linear-gradient(135deg, #ff4b16 0%, #ff8544 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 10px 26px rgba(255, 61, 0, 0.35);
 }
 
 .primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 14px 34px rgba(255, 61, 0, 0.35);
+  background: linear-gradient(135deg, #ff5e2e 0%, #ff985e 100%);
+  border-top-color: rgba(255, 255, 255, 0.75);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 14px 34px rgba(255, 61, 0, 0.48);
 }
 
 .primary:disabled,
@@ -514,20 +534,25 @@ body {
   min-height: 44px;
   min-width: 120px;
   padding: 12px 24px;
-  border: 1px solid var(--surface-border-strong);
-  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-top: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 8px;
   cursor: pointer;
   font: inherit;
   font-weight: 700;
   font-size: 14px;
   color: #fff;
-  background: rgba(255, 255, 255, 0.08);
-  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.18);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.03) 100%), rgba(20, 24, 34, 0.65);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 10px 26px rgba(0, 0, 0, 0.3);
 }
 
 .secondary:hover {
-  background: rgba(255, 255, 255, 0.16);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.07) 100%), rgba(26, 32, 46, 0.75);
+  border-top-color: rgba(255, 255, 255, 0.55);
   transform: translateY(-1px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 14px 30px rgba(0, 0, 0, 0.38);
 }
 
 .status {
@@ -555,19 +580,25 @@ body {
 
 .app-shell {
   min-height: 100vh;
+  position: relative;
   background:
-    radial-gradient(circle at 20% 15%, rgba(255, 61, 0, 0.06), transparent 15%),
-    linear-gradient(180deg, #040404, #0a0a0f);
+    radial-gradient(circle at 20% 20%, rgba(255, 61, 0, 0.22), transparent 34%),
+    radial-gradient(circle at 80% 15%, rgba(56, 189, 248, 0.15), transparent 30%),
+    linear-gradient(180deg, rgba(4, 4, 6, 0.85) 0%, rgba(8, 10, 16, 0.92) 100%),
+    url("https://images.unsplash.com/photo-1559136555-9303baea8ebd?auto=format&fit=crop&w=1920&q=80") no-repeat center center fixed;
+  background-size: cover;
+  background-attachment: fixed;
 }
 
 .topbar {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(4, 4, 4, 0.95);
-  backdrop-filter: blur(16px);
-  border-bottom: 1px solid var(--surface-border);
-  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.18);
+  background: rgba(10, 12, 18, 0.70);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4), inset 0 -1px 0 rgba(255, 255, 255, 0.08);
 }
 
 .topbar-inner {
@@ -589,6 +620,7 @@ body {
   width: 32px;
   height: 32px;
   font-size: 13px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 4px 14px rgba(255, 61, 0, 0.35);
 }
 
 .topbar-brand {
@@ -612,17 +644,21 @@ body {
 }
 
 .role-line {
-  color: var(--text-muted);
+  color: var(--text-soft);
   font-size: 12px;
   font-weight: 600;
   white-space: nowrap;
   display: none;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
 }
 
 .ghost {
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-top: 1px solid rgba(255, 255, 255, 0.32);
+  border-radius: 8px;
   color: #fff;
   cursor: pointer;
   font: inherit;
@@ -631,27 +667,35 @@ body {
   padding: 8px 14px;
   text-transform: uppercase;
   letter-spacing: 1px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
 .ghost:hover {
-  border-color: var(--accent);
-  color: var(--accent);
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 61, 0, 0.6);
+  border-top-color: rgba(255, 140, 75, 0.85);
+  color: #ff9b66;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 6px 18px rgba(255, 61, 0, 0.25);
 }
 
 .tabs {
   display: flex;
-  gap: 2px;
-  padding: 3px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--surface-border);
-  border-radius: 8px;
+  gap: 4px;
+  padding: 4px;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-top: 1px solid rgba(255, 255, 255, 0.32);
+  border-radius: 10px;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.18), 0 8px 24px rgba(0, 0, 0, 0.25);
   overflow-x: auto;
 }
 
 .tab {
   background: transparent;
-  border: 0;
-  border-radius: 6px;
+  border: 1px solid transparent;
+  border-radius: 7px;
   color: var(--text-muted);
   cursor: pointer;
   font: inherit;
@@ -660,15 +704,22 @@ body {
   padding: 8px 14px;
   white-space: nowrap;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.6px;
   transition: all 200ms ease;
+}
+
+.tab:hover:not(.active) {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
 }
 
 .tab.active {
   color: #fff;
-  background: linear-gradient(135deg, rgba(255, 61, 0, 0.95), rgba(255, 155, 98, 0.95));
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  box-shadow: 0 6px 18px rgba(255, 61, 0, 0.25);
+  background: linear-gradient(135deg, rgba(255, 80, 24, 0.95), rgba(255, 140, 75, 0.92));
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-top: 1px solid rgba(255, 255, 255, 0.55);
+  box-shadow: 0 6px 20px rgba(255, 61, 0, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.45);
 }
 
 .tab:hover:not(.active) {
@@ -702,7 +753,7 @@ main::before {
 .dashboard-header {
   margin-bottom: 28px;
   padding-bottom: 20px;
-  border-bottom: 1px solid var(--surface-border);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .dashboard-header h1 {
@@ -711,11 +762,14 @@ main::before {
   margin: 0 0 6px;
   line-height: 1.1;
   color: #fff;
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.6);
 }
 
 .dashboard-header p {
   margin: 0;
   font-size: 15px;
+  color: var(--text-soft);
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
 }
 
 #venture .dashboard-header,
@@ -739,11 +793,15 @@ main::before {
 .metrics article {
   position: relative;
   overflow: hidden;
-  padding: 20px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--surface-border);
-  border-radius: 10px;
-  transition: transform 200ms ease, box-shadow 200ms ease;
+  padding: 22px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.09) 0%, rgba(255, 255, 255, 0.02) 100%), rgba(14, 18, 26, 0.68);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-top: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 14px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 18px 45px rgba(0, 0, 0, 0.38);
+  transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease;
 }
 
 .metrics article::before {
@@ -752,12 +810,15 @@ main::before {
   inset: 0 auto 0 0;
   width: 4px;
   height: 100%;
-  background: linear-gradient(#ff3d00, #ff8a5c);
+  background: linear-gradient(180deg, #ff3d00, #ff8a5c);
+  box-shadow: 0 0 12px rgba(255, 61, 0, 0.6);
 }
 
 .metrics article:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.3);
+  transform: translateY(-4px);
+  border-color: rgba(255, 255, 255, 0.24);
+  border-top-color: rgba(255, 255, 255, 0.5);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 24px 60px rgba(0, 0, 0, 0.5);
 }
 
 .metrics small {
@@ -776,11 +837,12 @@ main::before {
   font-weight: 900;
   line-height: 1;
   color: var(--accent);
+  text-shadow: 0 2px 12px rgba(255, 61, 0, 0.3);
 }
 
 .metrics p {
   margin: 6px 0 0;
-  color: #6b6f74;
+  color: #94a3b8;
   font-size: 13px;
 }
 
@@ -811,17 +873,19 @@ main::before {
 .builder {
   position: relative;
   padding: 24px;
-  border: 1px solid var(--surface-border-strong);
-  border-radius: 16px;
-  background: linear-gradient(180deg, rgba(10, 10, 14, 0.94), rgba(14, 14, 18, 0.98));
-  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.24);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-top: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 18px;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%), rgba(12, 15, 24, 0.72);
+  backdrop-filter: blur(24px) saturate(170%);
+  -webkit-backdrop-filter: blur(24px) saturate(170%);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.22), 0 24px 70px rgba(0, 0, 0, 0.45);
   color: #e2e8f0;
 }
 
 .builder {
   max-width: 720px;
   margin: 0 auto;
-  backdrop-filter: blur(12px);
 }
 
 .panel::before {
@@ -829,8 +893,9 @@ main::before {
   position: absolute;
   inset: 0 18px auto;
   height: 3px;
-  background: linear-gradient(90deg, #ff3d00, transparent);
-  opacity: 0.5;
+  background: linear-gradient(90deg, #ff3d00, rgba(255, 61, 0, 0.2), transparent);
+  border-radius: 999px;
+  opacity: 0.8;
 }
 
 .panel h2 {
@@ -839,7 +904,7 @@ main::before {
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 1px;
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.8));
+  background: linear-gradient(90deg, #ffffff, rgba(255, 255, 255, 0.85));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -856,7 +921,7 @@ main::before {
   font-size: 13px;
   line-height: 1.5;
   margin-bottom: 14px;
-  color: #9ca3af;
+  color: var(--text-soft);
 }
 
 .panel label {
@@ -890,21 +955,26 @@ main::before {
 .result-card,
 .timeline div {
   min-height: 80px;
-  padding: 14px;
-  border: 1px solid var(--surface-border-strong);
-  border-radius: 16px;
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-top: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.01) 100%), rgba(16, 20, 30, 0.68);
+  backdrop-filter: blur(16px) saturate(150%);
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 12px 30px rgba(0, 0, 0, 0.3);
   transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
 }
 
 .venture-card {
-  background: linear-gradient(180deg, rgba(16, 16, 20, 0.98), rgba(8, 8, 12, 0.94));
-  border-left: 4px solid rgba(255, 61, 0, 0.32);
+  border-left: 4px solid rgba(255, 61, 0, 0.7);
 }
 
 .venture-card:hover {
   transform: translateY(-3px);
-  box-shadow: 0 22px 50px rgba(0, 0, 0, 0.24);
-  border-color: rgba(255, 61, 0, 0.45);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 22px 50px rgba(0, 0, 0, 0.45);
+  border-color: rgba(255, 255, 255, 0.24);
+  border-top-color: rgba(255, 255, 255, 0.45);
   border-left-color: var(--accent);
 }
 
@@ -930,16 +1000,21 @@ main::before {
 .tag-row span {
   padding: 4px 10px;
   border-radius: 999px;
-  background: rgba(255, 61, 0, 0.15);
-  color: #ff8a5c;
+  background: rgba(255, 61, 0, 0.18);
+  border: 1px solid rgba(255, 61, 0, 0.3);
+  border-top: 1px solid rgba(255, 140, 75, 0.5);
+  color: #ff9b66;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.3px;
-  transition: background 180ms ease;
+  backdrop-filter: blur(8px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  transition: all 180ms ease;
 }
 
 .tag-row span:hover {
-  background: rgba(255, 61, 0, 0.26);
+  background: rgba(255, 61, 0, 0.3);
+  color: #fff;
 }
 
 .icon-btn {
@@ -948,16 +1023,21 @@ main::before {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--surface-border);
-  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-top: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
   background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   color: var(--text-muted);
   cursor: pointer;
   font-size: 18px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
 .icon-btn:hover {
-  background: rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.16);
+  border-top-color: rgba(255, 255, 255, 0.5);
   color: #fff;
 }
 
@@ -967,13 +1047,13 @@ main::before {
 }
 
 .timeline div {
-  background: rgba(255, 255, 255, 0.03);
-  border-left: 4px solid rgba(255, 61, 0, 0.4);
+  border-left: 4px solid rgba(255, 61, 0, 0.5);
 }
 
 .timeline div:hover {
   border-left-color: var(--accent);
-  transform: translateX(3px);
+  transform: translateX(4px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 16px 36px rgba(0, 0, 0, 0.38);
 }
 
 .timeline strong {
@@ -993,11 +1073,15 @@ main::before {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 16px;
+  padding: 12px 18px;
   margin-bottom: 20px;
-  border-radius: 8px;
-  background: rgba(10, 10, 12, 0.9);
-  border: 1px solid var(--surface-border-strong);
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02)), rgba(12, 15, 22, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-top: 1px solid rgba(255, 255, 255, 0.32);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 10px 24px rgba(0, 0, 0, 0.28);
   color: #ff8a5c;
   font-size: 14px;
   font-weight: 600;
@@ -1005,9 +1089,11 @@ main::before {
 }
 
 .ai-status.active {
-  background: rgba(34, 197, 94, 0.08);
-  border-color: rgba(34, 197, 94, 0.2);
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(34, 197, 94, 0.05)), rgba(12, 18, 20, 0.75);
+  border-color: rgba(34, 197, 94, 0.35);
+  border-top-color: rgba(34, 197, 94, 0.6);
   color: #4ade80;
+  box-shadow: inset 0 1px 0 rgba(34, 197, 94, 0.3), 0 10px 24px rgba(34, 197, 94, 0.15);
 }
 
 .result {
@@ -1017,8 +1103,7 @@ main::before {
 }
 
 .result-card {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(10, 10, 12, 0.95));
-  border-left: 4px solid rgba(34, 197, 94, 0.5);
+  border-left: 4px solid rgba(34, 197, 94, 0.7);
 }
 
 .result-card strong {
