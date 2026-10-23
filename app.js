@@ -447,10 +447,13 @@ function setAiStatus(enabled, provider, model) {
   if (enabled) {
     const providerLabel = provider === "groq" ? "Groq enabled" : "OpenAI enabled";
     status.textContent = `${providerLabel} — model: ${model}`;
+    status.classList.add("active");
+    status.classList.remove("hidden");
   } else {
-    status.textContent = "Idea validation is available locally.";
+    status.textContent = "";
+    status.classList.remove("active");
+    status.classList.add("hidden");
   }
-  status.classList.toggle("active", enabled);
 }
 
 async function loadAiStatus() {
@@ -459,7 +462,10 @@ async function loadAiStatus() {
     setAiStatus(data.enabled, data.provider, data.model);
   } catch (error) {
     const status = $("#aiStatus");
-    if (status) status.textContent = "Unable to determine AI status.";
+    if (status) {
+      status.textContent = "";
+      status.classList.add("hidden");
+    }
   }
 }
 
