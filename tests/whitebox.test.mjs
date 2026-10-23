@@ -7,7 +7,6 @@
  * - Cookie header parsing
  * - Local fallback heuristic algorithms (Validation, NLP, Roadmap, FAQ, Suggestions)
  * - SQLite schema creation, foreign keys, and unique constraints
- * - Python CNN prototype feature extraction & cosine similarity matching
  */
 
 import { describe, it } from "node:test";
@@ -16,7 +15,6 @@ import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { DatabaseSync } from "node:sqlite";
 import { scryptSync, randomBytes, timingSafeEqual, createHmac } from "node:crypto";
-import { spawnSync } from "node:child_process";
 
 const ROOT = fileURLToPath(new URL("../", import.meta.url));
 
@@ -235,56 +233,5 @@ runTest("WhiteBox 5.1: SQLite schema enforces unique email and role constraints"
   }, /CHECK constraint failed/);
 });
 
-// 6. Python CNN Module White-Box Tests
-runTest("WhiteBox 6.1: predict_cnn.py verifies prototype categories and catalog integrity", () => {
-  const scriptPath = resolve(ROOT, "predict_cnn.py");
-  const catalogPath = resolve(ROOT, "models", "prototype_catalog.json");
-  const venvPython = resolve(ROOT, ".venv", "Scripts", "python.exe");
-  
-  const testPy = `
-import json
-from pathlib import Path
-with open(r"${catalogPath.replace(/\\/g, '\\\\')}", "r", encoding="utf-8") as f:
-    cat = json.load(f)
-assert len(cat["categories"]) == 8, f"Expected 8 categories, got {len(cat['categories'])}"
-assert len(cat["products"]) >= 20, f"Expected at least 20 real world products, got {len(cat['products'])}"
-print("CATALOG_OK")
-`;
-  const result = spawnSync(venvPython, ["-c", testPy], { encoding: "utf8" });
-  assert.equal(result.status, 0, result.stderr);
-  assert.equal(result.stdout.includes("CATALOG_OK"), true);
-});
-
-runTest("WhiteBox 6.2: predict_cnn.py cosine similarity calculation unit test", () => {
-  const venvPython = resolve(ROOT, ".venv", "Scripts", "python.exe");
-  const testSimPy = `
-import numpy as np
-from predict_cnn import cosine_similarity, generate_mvp_suggestions
-
-v1 = [1.0, 0.0, 0.0]
-v2 = [1.0, 0.0, 0.0]
-v3 = [0.0, 1.0, 0.0]
-
-sim_identical = cosine_similarity(v1, v2)
-sim_orthogonal = cosine_similarity(v1, v3)
-
-assert abs(sim_identical - 1.0) < 1e-4, f"Identical vectors must equal 1.0, got {sim_identical}"
-assert abs(sim_orthogonal - 0.0) < 1e-4, f"Orthogonal vectors must equal 0.0, got {sim_orthogonal}"
-
-sugg = generate_mvp_suggestions("smart_wearable", [{"name": "Apple Watch", "similarity_score": 0.88}], 5)
-assert len(sugg["scope_pruning"]) > 0, "Must have scope pruning suggestions"
-assert len(sugg["hardware_or_ux"]) > 0, "Must have hardware/UX suggestions"
-assert len(sugg["tech_stack_advice"]) > 0, "Must have tech stack suggestions"
-assert len(sugg["differentiation_strategy"]) > 0, "Must have differentiation suggestions"
-print("MATH_AND_SUGGESTIONS_OK")
-`;
-  const result = spawnSync(venvPython, ["-c", testSimPy], {
-    cwd: ROOT,
-    encoding: "utf8",
-    env: { ...process.env, TF_ENABLE_ONEDNN_OPTS: "0", TF_CPP_MIN_LOG_LEVEL: "3" }
-  });
-  assert.equal(result.status, 0, result.stderr);
-  assert.equal(result.stdout.includes("MATH_AND_SUGGESTIONS_OK"), true);
-});
 
 console.log(`\nAll ${passedTests}/${totalTests} White-Box unit tests passed successfully!\n`);

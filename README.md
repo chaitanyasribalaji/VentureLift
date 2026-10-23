@@ -16,14 +16,6 @@ A dependency-free full-stack prototype for an entrepreneurial support and innova
 ```powershell
 npm install
 npm test
-python -m pip install -r requirements.txt
-npm run test:python
-```
-
-Or run everything:
-
-```powershell
-npm run test:all
 ```
 
 ## Run
@@ -58,34 +50,13 @@ npm start
 
 If you prefer a different variable name, the server also accepts `ADVANCED_AI_API_KEY` as an alias for `OPENAI_API_KEY`.
 
-## TensorFlow CNN Prototype Matching & MVP Suggestions
+## React Adaptive Resolution Studio & Responsive Architecture
 
-The platform includes a retrained Convolutional Neural Network (CNN) specifically tailored for entrepreneurial innovation:
-- Extracts deep 128-dimensional feature embeddings from prototype images (sketches, CAD renders, hardware photos, UI mockups).
-- Matches the input against a comprehensive benchmark database of real-world commercial products and prototypes.
-- Calculates the count of real-world market matches (`match_count`).
-- Delivers tailored, structured MVP improvement suggestions:
-  - ✂️ 60-90 Day MVP Scope Pruning
-  - 🛠️ Industrial Design & UX Form-Factor Refinements
-  - ⚡ Low-Cost BOM & Tech Stack Guidance
-  - 🎯 Competitive Differentiation Strategy
-  - 📈 30-Day Early Adopter Validation Milestones
-
-### Retrain Prototype Model
-```powershell
-python train_cnn_prototype.py --epochs 8
-```
-or via the unified CLI:
-```powershell
-python train_cnn.py --mode prototype --epochs 8
-```
-
-### CNN Inference Route
-- `POST /api/cnn-predict`
-- Body: `{ "image_base64": "...", "venture_id": 123 }`
-- Returns: `{ "prediction": { "predicted_category", "confidence", "match_count", "innovation_index", "top_matches", "suggestions" } }`
-
-You can also upload a prototype image or choose from 8 instant prototype presets directly from the **AI Validation** tab in the web UI.
+The platform features an integrated **React Resolution Studio** that dynamically adapts to every device screen size:
+- **Real-Time Viewport Telemetry**: Actively monitors window dimensions, aspect ratio, device classification (Mobile XS, Tablet SM, Laptop MD, Desktop LG, Ultra-wide XL), orientation, and Retina / HiDPI pixel density.
+- **Interactive Device Simulation**: Test layouts directly from the dashboard across standard device breakpoints (Mobile 375px, Tablet 768px, Laptop 1024px, Desktop 1440px).
+- **Dynamic Density Controls**: Adjust UI spacing between Compact, Comfortable, and Spacious modes.
+- **Full Cross-Resolution Optimization**: Fluid styling from 320px mobile up to 4K ultra-wide monitors.
 
 ## Automated Test Suites
 

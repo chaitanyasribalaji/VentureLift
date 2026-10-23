@@ -92,7 +92,7 @@ async function main() {
       assert.equal(res.headers.get("content-type"), "text/html; charset=utf-8");
       const text = await res.text();
       assert.equal(text.includes("VentureLift"), true);
-      assert.equal(text.includes("CNN Prototype Matcher"), true);
+      assert.equal(text.includes("Idea validation"), true);
     });
 
     await runTest("BlackBox 1.2: GET /styles.css serves valid stylesheet with 200 OK", async () => {
@@ -100,7 +100,7 @@ async function main() {
       assert.equal(res.status, 200);
       assert.equal(res.headers.get("content-type"), "text/css; charset=utf-8");
       const css = await res.text();
-      assert.equal(css.includes(".proto-stat-banner"), true);
+      assert.equal(css.includes(".venture-card"), true);
     });
 
     await runTest("BlackBox 1.3: GET /non-existent-page returns 404 Not Found", async () => {
@@ -266,39 +266,6 @@ async function main() {
       assert.equal(data.result.weeks.length > 0, true);
     });
 
-    // 6. Retrained CNN Prototype Matcher & MVP Suggestions Endpoint Tests
-    await runTest("BlackBox 6.1: POST /api/cnn-predict rejects missing image_base64 with 400", async () => {
-      const res = await fetch(`${BASE_URL}/api/cnn-predict`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Cookie: founderCookie },
-        body: JSON.stringify({})
-      });
-      assert.equal(res.status, 400);
-    });
-
-    await runTest("BlackBox 6.2: POST /api/cnn-predict processes prototype image and returns matches & MVP suggestions", async () => {
-      const res = await fetch(`${BASE_URL}/api/cnn-predict`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Cookie: founderCookie },
-        body: JSON.stringify({ image_base64: TEST_IMAGE_B64 })
-      });
-      assert.equal(res.status, 200);
-      const data = await res.json();
-      assert.equal(Boolean(data.prediction), true);
-      
-      const pred = data.prediction;
-      assert.equal(typeof pred.predicted_category, "string");
-      assert.equal(typeof pred.match_count, "number");
-      assert.equal(typeof pred.innovation_index, "number");
-      assert.equal(Array.isArray(pred.top_matches), true);
-      assert.equal(pred.top_matches.length > 0, true);
-      assert.equal(Boolean(pred.suggestions), true);
-      assert.equal(Array.isArray(pred.suggestions.scope_pruning), true);
-      assert.equal(Array.isArray(pred.suggestions.hardware_or_ux), true);
-      assert.equal(Array.isArray(pred.suggestions.tech_stack_advice), true);
-      assert.equal(Array.isArray(pred.suggestions.differentiation_strategy), true);
-      assert.equal(Array.isArray(pred.suggestions.validation_milestones), true);
-    });
 
     console.log(`\nAll ${passedTests}/${totalTests} Black-Box functional tests passed successfully!\n`);
   } finally {

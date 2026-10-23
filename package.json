@@ -14,10 +14,11 @@
     "test:whitebox": "node tests/whitebox.test.mjs",
     "test:blackbox": "node tests/blackbox.test.mjs",
     "test:integrated": "node tests/integrated.test.mjs",
-    "test:backend": "node --test tests/test_backend.mjs",
-    "test:python": "python -m pytest tests/ -v"
+    "test:backend": "node --test tests/test_backend.mjs"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.0.0"
+    "@supabase/supabase-js": "^2.0.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
   }
 }

@@ -5,7 +5,7 @@
  * - HTTP Server <-> SQLite Database
  * - Session Management <-> Multi-role RBAC (Founder, Mentor, Admin)
  * - Venture Profile Creation <-> AI Validation <-> NLP Signal Engine
- * - Node Backend <-> Python CNN Subprocess (Prototype Matching & Real-world Benchmarks)
+ * - Strategic Roadmap Generation & Dynamic Guidance
  * - Report Persistence & Querying across the full lifecycle
  */
 
@@ -180,38 +180,6 @@ async function main() {
       assert.equal(Array.isArray(data.result.keywords), true);
     });
 
-    // STEP 5: Retrained CNN Prototype Matcher Integration
-    await runTest("Integration 7: CNN prototype inference matches real-world products and provides MVP recommendations", async () => {
-      const res = await fetch(`${BASE_URL}/api/cnn-predict`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Cookie: founderCookie },
-        body: JSON.stringify({
-          image_base64: PROTOTYPE_TEST_IMAGE,
-          venture_id: ventureId
-        })
-      });
-      assert.equal(res.status, 200);
-      const data = await res.json();
-      assert.equal(Boolean(data.prediction), true);
-      
-      const pred = data.prediction;
-      assert.equal(typeof pred.match_count, "number");
-      assert.equal(pred.match_count > 0, true);
-      assert.equal(pred.top_matches.length > 0, true);
-      
-      // Verify match details include commercial products
-      const topProduct = pred.top_matches[0];
-      assert.equal(typeof topProduct.name, "string");
-      assert.equal(typeof topProduct.similarity_score, "number");
-      assert.equal(Boolean(topProduct.stage), true);
-      
-      // Verify tailored MVP suggestions
-      const sugg = pred.suggestions;
-      assert.equal(sugg.scope_pruning.length > 0, true);
-      assert.equal(sugg.hardware_or_ux.length > 0, true);
-      assert.equal(sugg.tech_stack_advice.length > 0, true);
-      assert.equal(sugg.validation_milestones.length > 0, true);
-    });
 
     // STEP 6: Strategic Roadmap Generation Integration
     await runTest("Integration 8: Generate strategic roadmap for high-validation venture", async () => {

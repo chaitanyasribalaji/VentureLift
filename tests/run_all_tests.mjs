@@ -2,9 +2,9 @@
  * VentureLift Unified Test Runner
  * 
  * Executes:
- * 1. White-Box Tests (Internal units, algorithms, crypto, schemas, cosine similarity)
- * 2. Black-Box Tests (External HTTP contracts, status codes, auth boundaries, AI validation, CNN inference)
- * 3. Integrated Tests (End-to-end founder journey, DB persistence, Python CNN subprocess, multi-role RBAC)
+ * 1. White-Box Tests (Internal units, algorithms, crypto, schemas)
+ * 2. Black-Box Tests (External HTTP contracts, status codes, auth boundaries, AI validation)
+ * 3. Integrated Tests (End-to-end founder journey, DB persistence, multi-role RBAC)
  */
 
 import { spawnSync } from "node:child_process";
