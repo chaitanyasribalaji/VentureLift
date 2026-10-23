@@ -4,7 +4,11 @@
   "description": "VentureLift entrepreneurial support platform with optional Supabase sync.",
   "type": "module",
   "main": "server.mjs",
+  "engines": {
+    "node": ">=22.5.0"
+  },
   "scripts": {
+    "build": "echo 'Build complete'",
     "start": "node server.mjs",
     "test": "node tests/run_all_tests.mjs",
     "test:whitebox": "node tests/whitebox.test.mjs",
