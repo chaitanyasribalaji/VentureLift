@@ -2,6 +2,10 @@
   "version": 2,
   "builds": [
     {
+      "src": "api/*.js",
+      "use": "@vercel/node"
+    },
+    {
       "src": "api/[...slug].js",
       "use": "@vercel/node"
     },
@@ -20,8 +24,68 @@
   ],
   "routes": [
     {
+      "src": "/api/register",
+      "dest": "/api/register.js"
+    },
+    {
+      "src": "/api/login",
+      "dest": "/api/login.js"
+    },
+    {
+      "src": "/api/me",
+      "dest": "/api/me.js"
+    },
+    {
+      "src": "/api/logout",
+      "dest": "/api/logout.js"
+    },
+    {
+      "src": "/api/ventures",
+      "dest": "/api/ventures.js"
+    },
+    {
+      "src": "/api/validate",
+      "dest": "/api/validate.js"
+    },
+    {
+      "src": "/api/mentors",
+      "dest": "/api/mentors.js"
+    },
+    {
+      "src": "/api/ai-status",
+      "dest": "/api/ai-status.js"
+    },
+    {
+      "src": "/api/nlp",
+      "dest": "/api/nlp.js"
+    },
+    {
+      "src": "/api/faq",
+      "dest": "/api/faq.js"
+    },
+    {
+      "src": "/api/suggestions",
+      "dest": "/api/suggestions.js"
+    },
+    {
+      "src": "/api/roadmap",
+      "dest": "/api/roadmap.js"
+    },
+    {
+      "src": "/api/users",
+      "dest": "/api/users.js"
+    },
+    {
+      "src": "/api/reports",
+      "dest": "/api/reports.js"
+    },
+    {
+      "src": "/api/cnn-predict",
+      "dest": "/api/cnn-predict.js"
+    },
+    {
       "src": "/api/(.*)",
-      "dest": "/api/[...slug].js"
+      "dest": "/api/[...slug].js?slug=$1"
     },
     {
       "src": "/",
