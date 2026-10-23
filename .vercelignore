@@ -1,0 +1,15 @@
+# Ignore Python files and dependencies so Vercel builds as pure Node.js + static
+requirements.txt
+*.py
+tests/test_*.py
+.venv
+__pycache__
+*.pyc
+
+# Model binaries not needed on serverless (prototype_catalog.json is used)
+models/*.keras
+models/*.h5
+
+# Local database and environment files
+.env
+venture_platform.db
