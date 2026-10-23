@@ -9,10 +9,16 @@ const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
 
 async function api(path, options = {}) {
+  const token = typeof localStorage !== "undefined" ? localStorage.getItem("vl_session_token") : null;
+  const headers = {
+    "Content-Type": "application/json",
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(options.headers || {}),
+  };
   const response = await fetch(path, {
-    credentials: "same-origin",
-    headers: { "Content-Type": "application/json" },
+    credentials: "include",
     ...options,
+    headers,
   });
 
   const responseText = await response.text();
@@ -435,8 +441,12 @@ function renderVentureSearchResults(ventures) {
 }
 
 async function loadSession() {
-  const data = await api("/api/me");
-  state.user = data.user;
+  try {
+    const data = await api("/api/me");
+    state.user = data.user;
+  } catch {
+    state.user = null;
+  }
   applyRoleUi();
   if (state.user) await loadVentures();
 }
@@ -474,6 +484,9 @@ async function login(email, password) {
     method: "POST",
     body: JSON.stringify({ email, password }),
   });
+  if (data.token) {
+    localStorage.setItem("vl_session_token", data.token);
+  }
   state.user = data.user;
   $("#loginStatus").textContent = "";
   applyRoleUi();
@@ -703,6 +716,7 @@ async function loadUsers() {
 
 async function logout() {
   try {
+    localStorage.removeItem("vl_session_token");
     await api("/api/logout", { method: "POST", body: "{}" });
   } finally {
     state.user = null;
@@ -745,10 +759,13 @@ $("#registerForm").addEventListener("submit", async (event) => {
   const payload = Object.fromEntries(new FormData(form).entries());
   $("#registerStatus").textContent = "Creating account...";
   try {
-    await api("/api/register", {
+    const data = await api("/api/register", {
       method: "POST",
       body: JSON.stringify(payload),
     });
+    if (data.token) {
+      localStorage.setItem("vl_session_token", data.token);
+    }
     $("#registerStatus").textContent = "Account created. You can login now.";
     form.reset();
     switchAuth("login");
